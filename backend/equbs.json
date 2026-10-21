@@ -1,0 +1,16 @@
+[
+  {
+    "id": "1",
+    "name": "Daily 200 ETB Equb MERCHAT (ሞላሌ MOLALE)",
+    "amount": "200 ETB",
+    "cycle": "Daily",
+    "address": "ሞላሌ"
+  },
+  {
+    "id": "equb_1791976537492",
+    "name": "Daily 200 ETB Equb TWO",
+    "amount": "2000 ETB",
+    "cycle": "ሳምንታዊ (Weekly)",
+    "address": "ሞላሌ"
+  }
+]

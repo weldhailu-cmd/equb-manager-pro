@@ -1,0 +1,9 @@
+@echo off
+echo Starting Equb Manager Pro Setup...
+call .venv\Scripts\activate.bat
+set PYTHONPATH=.
+echo Installing/Checking Dependencies...
+pip install -r requirements.txt
+echo Launching Uvicorn Server & Telegram Bot...
+uvicorn backend.main:app --reload
+pause

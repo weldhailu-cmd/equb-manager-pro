@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html[lang="am"] body {
+  font-family: "Noto Sans Ethiopic", "Inter", sans-serif;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  color: #2A1F17;
+}
+
+::selection {
+  background-color: #C4922F;
+  color: #1C1410;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid #C4922F;
+  outline-offset: 2px;
+}

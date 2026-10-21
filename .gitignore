@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Python Virtual Environments
+.venv/
+.venv-1/
+venv/
+env/
+__pycache__/
+
+# Databases & Media uploads
+*.db
+*.sqlite3
+uploads/
+
+# Temporary & System Files
+.vercel/
+frontend/.vercel/
+~$*.docx
+*.log
+.DS_Store
+.vercel
+.env*
