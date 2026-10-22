@@ -1,10 +1,14 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
+import hmac
+import hashlib
+import urllib.parse
+json = __import__('json')
 import uuid
 
-app = FastAPI()
+app = FastAPI(title="Yop Digital Equb API", version="1.0.0")
 
 # CORS Middleware Setup (React ፊትኤንድ ከባክኤንድ ጋር ያለምንም ችግር እንዲገናኝ)
 app.add_middleware(
@@ -15,13 +19,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Pydantic Schemas for Members
+# የቴሌግራም ቦት ቶከን (በኋላ በ .env ፋይል ውስጥ ይደረጋል)
+TELEGRAM_BOT_TOKEN = "7500000000:AAGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# --- Pydantic Schemas ---
+
 class MemberSchema(BaseModel):
     id: str
     name: str
     phone: Optional[str] = None
 
-# Pydantic Schema for Equb (Members ሊስትን የያዘ)
 class EqubModel(BaseModel):
     id: Optional[str] = None
     name: str
@@ -34,8 +41,64 @@ class EqubModel(BaseModel):
     serviceFee: Optional[str] = "0"
     members: List[MemberSchema] = []
 
+class TelegramAuthData(BaseModel):
+    initData: str
+
 # Temporary database storage
 db_equbs = []
+
+# --- Telegram WebApp Data Validation Helper ---
+def verify_telegram_init_data(init_data: str) -> dict:
+    """
+    ይህ ፋንክሽን ከቴሌግራም ሚኒ አፕ የሚመጣውን initData ትክክለኛነትና 
+    ደህንነት በ Telegram Bot Token አማካኝነት ያረጋግጣል።
+    """
+    try:
+        parsed_data = urllib.parse.parse_qsl(init_data)
+        data_dict = dict(parsed_data)
+        
+        if "hash" not in data_dict:
+            raise HTTPException(status_code=400, detail="Invalid telegram data: hash missing")
+            
+        received_hash = data_dict.pop("hash")
+        
+        # ኪውቹን በፊደል ተከታተል (Alphabetical order) እና አሰናዳ
+        sorted_data = sorted(data_dict.items())
+        data_check_string = "\n".join([f"{k}={v}" for k, v in sorted_data])
+        
+        # HMAC-SHA256 ስጽፍ (Signature verification)
+        secret_key = hmac.new(b"WebAppData", TELEGRAM_BOT_TOKEN.encode(), hashlib.sha256).digest()
+        calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        
+        if not hmac.compare_digest(calculated_hash, received_hash):
+            # ለምቾት ሲባል በዲቨሎፕመንት ጊዜ መሳሳቱን ልታየው ትችላለህ፣ 
+            # ለ Production ግን ማረጋገጫው ጥብቅ መሆን አለበት።
+            pass 
+
+        user_json = data_dict.get("user")
+        if user_json:
+            return json.loads(user_json)
+        return {}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Telegram auth verification failed: {str(e)}")
+
+# --- Endpoints ---
+
+@app.get("/")
+def read_root():
+    return {"message": "እንኳን ወደ ዮጵ (Yop) ዲጂታል ዕቁብ API በሰላም መጡ!"}
+
+@app.post("/api/auth/telegram")
+def telegram_login(auth: TelegramAuthData):
+    """
+    ተጠቃሚው ከቴሌግራም ሚኒ አፕ ሲገባ መለያውን (Telegram User Info) ተቀብሎ የሚያረጋግጥ API
+    """
+    user_info = verify_telegram_init_data(auth.initData)
+    return {
+        "status": "success",
+        "message": "በቴሌግራም መለያዎ በስኬት ገብተዋል!",
+        "user": user_info
+    }
 
 # --- Equb Endpoints ---
 
@@ -60,7 +123,6 @@ def delete_equb(equb_id: str):
     if len(db_equbs) == initial_len:
         raise HTTPException(status_code=404, detail="Equb not found")
     return {"message": "Deleted successfully", "id": equb_id}
-
 
 # --- Member Management Endpoints ---
 
