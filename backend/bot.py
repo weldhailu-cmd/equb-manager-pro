@@ -9,7 +9,7 @@ from aiogram.client.session.aiohttp import AiohttpSession
 TOKEN = "8173763256:AAGnFioCLFGGFRz6BctNR1odMSkTz6WjXpw"
 ADMIN_ID = os.getenv("ADMIN_CHAT_ID", "123456789")
 
-# 🌟 የኔትወርክ ታይም አውትን ማሳደጊያ (60 ሰከንድ የጥበቃ ጊዜ ለኢንተርኔት መዘግየት)
+# 🌟 የኔትወርክ ታይም አውትን ማሳደጊያ
 session = AiohttpSession(timeout=60.0)
 bot = Bot(token=TOKEN, session=session)
 dp = Dispatcher()
@@ -31,18 +31,28 @@ def load_equbs_from_file():
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
+    # የተስተካከሉ እና የተሟሉ ዋና ዋና አዝራሮች
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="📊 እቁብን ይመልከቱ"), KeyboardButton(text="🏆 አሸናፊዎች")],
-            [KeyboardButton(text="📸 የደረሰኝ መላኪያ")],
+            [KeyboardButton(text="📸 የደረሰኝ መላኪያ"), KeyboardButton(text="🛒 ማርኬትፕሌይ (Marketplace)")],
             [KeyboardButton(text="🏷️ እጣ መሸጥ"), KeyboardButton(text="🛒 እጣ መግዛት")],
-            [KeyboardButton(text="🌐 ቋንቋ / Language")]
+            [KeyboardButton(text="🚀 ወደፊት የሚጀመሩ (Coming Soon)"), KeyboardButton(text="🌐 ቋንቋ / Language")]
         ],
         resize_keyboard=True
     )
     
+    # የጠየቅካቸውን ትክክለኛ ስሎጋን እና የ 'ዮጵ' (ቢጫ ወርቅ) ትርጉም የያዘ ዌልካም ቴክስት
+    welcome_text = (
+        "🌿 **እንኳን ወደ Yop (Yellow Gold) በደህና መጡ!**\n\n"
+        "🟡 **Yop (Yellow Gold) — Hub of Prosperity and Savings**\n"
+        "«ዮጵ» የሚለው ቃል ትርጉሙ ቢጫ ወርቅ (Yellow Gold) ሲሆን፤ ማህበረሰባችንን በቁጠባ፣ በዕቁብ እና በብልጽግና ለማገናኘት የተፈጠረ ዲጂታል መድረክ ነው።\n\n"
+        "ይህ ቦት እቁቦችዎን እንዲከታተሉ፣ ደረሰኝ እንዲልኩ፣ ማርኬትፕሌይን እንዲጠቀሙ እና የዕጣ ውጤቶችን በቅጽበት እንዲከታተሉ ያስችልዎታል።\n\n"
+        "👇 ከታች ካሉት አዝራሮች በመምረጥ አገልግሎቱን ማግኘት ይችላሉ:"
+    )
+    
     await message.answer(
-        "ሰላም! እንኳን ወደ **Yop Digital Equb** በደህና መጡ።\n\nምርጫዎን ከታች ካሉት በተኖች ይምረጡ:",
+        welcome_text,
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
@@ -65,22 +75,23 @@ async def show_equbs(message: types.Message):
         ])
     
     markup = InlineKeyboardMarkup(inline_keyboard=buttons)
-    await message.answer("📋 **ንቁ የእቁብ ዝርዝሮች (ከዌብሳይቱ የተወሰደ):**", reply_markup=markup, parse_mode="Markdown")
+    await message.answer("📋 **ንቁ የእቁብ ዝርዝሮች (የእቁብ ማስተዳደሪያ):**", reply_markup=markup, parse_mode="Markdown")
 
 @dp.message(F.text.contains("አሸናፊዎች"))
 @dp.message(Command("winners"))
 async def show_winners_btn(message: types.Message):
     await message.answer(
-        "🏆 **የእጣ አሸናፊዎች ዝርዝር:**\n\n"
+        "🏆 **የእጣ አሸናፊዎች ማዕከል (Yop.com):**\n\n"
         "• 1ኛ ዙር አሸናፊ፦ አበበ ከበደ (10,000 ብር) - 🟢 ተጠናቀቀ\n"
-        "• 2ኛ ዙር አሸናፊ፦ መሳይ ወልዴ (10,000 ብር) - 🟢 ተጠናቀቀ",
+        "• 2ኛ ዙር አሸናፊ፦ መሳይ ወልዴ (10,000 ብር) - 🟢 ተጠናቀቀ\n\n"
+        "🎉 *ዮጵ — የልብ አድርስ አንጀት አርስ!*",
         parse_mode="Markdown"
     )
 
 @dp.message(F.text.contains("የደረሰኝ መላኪያ"))
 @dp.message(Command("receipt"))
 async def prompt_receipt_btn(message: types.Message):
-    await message.answer("📸 እባክዎ የባንክ የክፍያ ማስተላለፊያ (Receipt) ስክሪንሾት ፎቶ በቀጥታ ወደዚህ ቦት ይላኩ። ለአድሚን ማረጋገጫ ይተላለፋል።")
+    await message.answer("📸 እባክዎ የባንክ የክፍያ ማስተላለፊያ (Receipt) ስክሪንሾት ፎቶ በቀጥታ ወደዚህ ቦት ይላኩ። ለአድሚን ማረጋገጫ ወዲያውኑ ይተላለፋል።")
 
 @dp.message(F.text.contains("እጣ መሸጥ"))
 @dp.message(Command("sell"))
@@ -90,7 +101,26 @@ async def sell_lottery(message: types.Message):
 @dp.message(F.text.contains("እጣ መግዛት"))
 @dp.message(Command("buy"))
 async def buy_lottery(message: types.Message):
-    await message.answer("🛒 ለሽያጭ የቀረቡ እቁቦችን ለመግዛት የሚፈልጉትን ይምረጡ።")
+    await message.answer("🛒 ለሽያጭ የቀረቡ እቁቦችን ለመግዛት የሚፈልጉትን አማራጭ ይምረጡ።")
+
+@dp.message(F.text.contains("ማርኬትፕሌይ"))
+@dp.message(Command("marketplace"))
+async def marketplace_menu(message: types.Message):
+    await message.answer(
+        "🛒 **Yop.com ማርኬትፕሌይ (Marketplace):**\n\n"
+        "እዚህ ጋር የተለያዩ ንግዶች፣ ምርቶች እና ማስታወቂያዎች ይስተናገዳሉ።\n\n"
+        "📌 ሙሉ አገልግሎቶች በቅርቡ በድር-ገጹ በኩል ይለቀቃሉ!"
+    )
+
+@dp.message(F.text.contains("ወደፊት የሚጀመሩ"))
+@dp.message(Command("comingsoon"))
+async def coming_soon_menu(message: types.Message):
+    await message.answer(
+        "🚀 **ወደፊት የሚጀመሩ አገልግሎቶች (Coming Soon):**\n\n"
+        "• የላቀ የዲጂታል ሎተሪ ስርዓቶች\n"
+        "• አውቶማቲክ የባንክ API ትስስር\n"
+        "• የንግድ ማስተዋወቂያ ማዕከላት"
+    )
 
 @dp.message(F.text.contains("ቋንቋ") | F.text.contains("Language"))
 @dp.message(Command("language"))
@@ -122,9 +152,42 @@ async def handle_screenshot(message: types.Message):
         print(f"Error forwarding to admin: {e}")
         await message.reply("⚠️ ስክሪንሾቱን መላክ አልተቻለም። እባክዎ ቆይተው እንደገና ይሞክሩ።")
 
+# 🟢 የአድሚኑን ውሳኔ (Approve/Reject) ማስተናገጃ Callback Handler (የተጨመረ)
+@dp.callback_query(F.data.startswith("app_") | F.data.startswith("rej_"))
+async def handle_admin_approval(callback: types.CallbackQuery):
+    action, user_id = callback.data.split("_")
+    user_chat_id = int(user_id)
+
+    if action == "app":
+        try:
+            await bot.send_message(
+                chat_id=user_chat_id,
+                text="🎉 **ክፍያዎ ተረጋግጧል!**\n\nየላኩት የክፍያ ስክሪንሾት በአድሚኑ ተረጋግጦ በእቁቡ ውድድር ውስጥ ተመዝግበዋል። መልካም ዕድል! 🌿",
+                parse_mode="Markdown"
+            )
+            await callback.message.edit_caption(
+                caption=callback.message.caption + "\n\n✅ **ሁኔታ፦ አድሚኑ አረጋግጦታል (Approved)**"
+            )
+            await callback.answer("ክፍያው በስኬት ተረጋገጠ!", show_alert=True)
+        except Exception as e:
+            await callback.answer(f"ስህተት፦ {e}", show_alert=True)
+
+    elif action == "rej":
+        try:
+            await bot.send_message(
+                chat_id=user_chat_id,
+                text="⚠️ **የክፍያ ማረጋገጫ ስህተት!**\n\nየላኩት የክፍያ ስክሪንሾት ትክክለኛ ባለመሆኑ ውድቅ ተደርጓል። እባክዎ ትክክለኛውን ደረሰኝ በድጋሚ ይላኩ።",
+                parse_mode="Markdown"
+            )
+            await callback.message.edit_caption(
+                caption=callback.message.caption + "\n\n❌ **ሁኔታ፦ ውድቅ ተደርጓል (Rejected)**"
+            )
+            await callback.answer("ክፍያው ውድቅ ተደርጓል!", show_alert=True)
+        except Exception as e:
+            await callback.answer(f"ስህተት፦ {e}", show_alert=True)
+
 async def main():
     print("🤖 የቴሌግራም ቦቱ በስራ ላይ ውሏል (t.me/YopEqubBot)...")
-    # 🌟 የኔትወርክ መቋረጥ ቢያጋጥም አውቶማቲክ እንደገና እንዲሞክር ማድረግ (Retry Logic)
     while True:
         try:
             await dp.start_polling(bot)
