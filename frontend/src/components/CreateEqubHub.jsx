@@ -1,36 +1,38 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, ArrowRight, 
-  ArrowLeft, Percent, Calculator, CheckSquare, Square, MapPin, KeyRound, Eye, EyeOff, HelpCircle, Clock, PlusCircle, Users 
+  ArrowLeft, Percent, Calculator, CheckSquare, Square, MapPin, KeyRound, Eye, EyeOff, HelpCircle, Clock, Calendar, PlusCircle, Users 
 } from 'lucide-react';
 
 export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
-  // Navigation state inside Equb Hub: 'select' (choice) or 'form' (create form)
   const [hubView, setHubView] = useState('select');
 
-  const [equbName, setEqubName] = useState(lang === 'am' ? 'የዕለታዊ 200 ብር እቁብ' : 'Daily 200 ETB Equb');
+  const [equbName, setEqubName] = useState(lang === 'am' ? 'የወርሃዊ 200 ብር እቁብ' : 'Monthly 200 ETB Equb');
   const [cityAddress, setCityAddress] = useState('ሞላሌ');
   const [amount, setAmount] = useState('200');
   
-  // 🕒 Payment Range Window (ከስንት ሰዓት እስከ ስንት ሰዓት)
-  const [depositStartTime, setDepositStartTime] = useState('08:00');
-  const [depositEndTime, setDepositEndTime] = useState('18:00');
+  // Frequency State: 'daily', 'weekly', 'monthly'
+  const [frequency, setFrequency] = useState('monthly');
 
-  // 🎲 Draw Range Window (ከስንት ሰዓት እስከ ስንት ሰዓት)
-  const [drawStartTime, setDrawStartTime] = useState('20:00');
-  const [drawEndTime, setDrawEndTime] = useState('20:30');
-  
+  // Time / Date Range States based on Frequency
+  // Daily -> Times (e.g. 08:00 to 18:00)
+  // Weekly -> Days (e.g. 'ሰኞ' to 'እሁድ')
+  // Monthly -> Day numbers (e.g. 1 to 5 for deposit, 6 for draw)
+  const [depositStart, setDepositStart] = useState('08:00');
+  const [depositEnd, setDepositEnd] = useState('18:00');
+  const [drawStart, setDrawStart] = useState('19:00');
+  const [drawEnd, setDrawEnd] = useState('20:00');
+
   // Passwords & Recovery
   const [adminPassword, setAdminPassword] = useState('');
   const [memberPassword, setMemberPassword] = useState('');
   const [showAdminPass, setShowAdminPass] = useState(false);
   const [showMemberPass, setShowMemberPass] = useState(false);
   
-  const [securityQuestion, setSecurityQuestion] = useState(lang === 'am' ? 'የመጀመሪያ ትምህርት ቤትዎ ስም ማን ነው?' : 'What was the name of your first school?');
+  const [securityQuestion, setSecurityQuestion] = useState(lang === 'am' ? 'የመጀመሪያ ትምህርት ቤትዎ ስም ማን ነው?' : 'First school name?');
   const [securityAnswer, setSecurityAnswer] = useState('');
   const [showSecurityAnswer, setShowSecurityAnswer] = useState(false);
 
-  const [frequency, setFrequency] = useState(lang === 'am' ? 'ዕለታዊ (Daily - 24 ሰዓት)' : 'Daily (24 Hours)');
   const [selectedFeePercent, setSelectedFeePercent] = useState(0.12);
 
   const numericAmount = parseFloat(amount) || 0;
@@ -38,6 +40,28 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const totalPool = numericAmount * estimatedMembers;
   const serviceFeeAmount = (totalPool * selectedFeePercent) / 100;
   const netPoolForWinner = totalPool - serviceFeeAmount;
+
+  const handleFrequencyChange = (e) => {
+    const val = e.target.value;
+    setFrequency(val);
+    // Set smart defaults based on frequency selection
+    if (val === 'daily') {
+      setDepositStart('08:00');
+      setDepositEnd('18:00');
+      setDrawStart('19:00');
+      setDrawEnd('20:00');
+    } else if (val === 'weekly') {
+      setDepositStart('ሰኞ (Monday)');
+      setDepositEnd('እሁድ (Sunday)');
+      setDrawStart('እሁድ ከቀኑ 6:00');
+      setDrawEnd('እሁድ ማታ');
+    } else if (val === 'monthly') {
+      setDepositStart('ቀን 1');
+      setDepositEnd('ቀን 5');
+      setDrawStart('ቀን 6');
+      setDrawEnd('ቀን 6 ማታ');
+    }
+  };
 
   const handleBack = () => {
     if (hubView === 'form') {
@@ -53,7 +77,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
     e.preventDefault();
 
     if (!securityAnswer.trim()) {
-      alert(lang === 'am' ? 'እባክዎ አድሚን ፓስወርድ ሲረሳ የሚሆን የሚስጥር መልስ ያስገቡ!' : 'Please provide a security answer for password recovery.');
+      alert(lang === 'am' ? 'እባክዎ አድሚን ፓስወርድ ሲረሳ የሚሆን የሚስጥር መልስ ያስገቡ!' : 'Please provide a security answer.');
       return;
     }
 
@@ -62,11 +86,9 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       name: equbName,
       contributionAmount: numericAmount,
       frequency,
-      timeConfig: {
-        depositStart: depositStartTime,
-        depositEnd: depositEndTime,
-        drawStart: drawStartTime,
-        drawEnd: drawEndTime
+      scheduleConfig: {
+        depositRange: `${depositStart} እስከ ${depositEnd}`,
+        drawRange: `${drawStart} እስከ ${drawEnd}`
       },
       feePercent: selectedFeePercent,
       adminPassword,
@@ -90,9 +112,9 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
           id: newEqubObj.id,
           name: newEqubObj.name,
           amount: `${numericAmount} ETB`,
-          cycle: frequency,
-          depositRange: `${depositStartTime} - ${depositEndTime}`,
-          drawRange: `${drawStartTime} - ${drawEndTime}`,
+          frequency,
+          depositRange: newEqubObj.scheduleConfig.depositRange,
+          drawRange: newEqubObj.scheduleConfig.drawRange,
           address: cityAddress
         })
       });
@@ -104,7 +126,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
     if (onNavigate) onNavigate('equb-detail');
   };
 
-  // 1️⃣ CHOICE VIEW: Option to Create or View Existing
+  // 1️⃣ CHOICE VIEW
   if (hubView === 'select') {
     return (
       <div className="max-w-3xl mx-auto p-4 md:p-6 space-y-6">
@@ -133,7 +155,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* Create New Option */}
             <button
               onClick={() => setHubView('form')}
               className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 p-6 rounded-2xl font-black text-sm flex flex-col justify-between h-44 shadow-xl cursor-pointer transition transform hover:-translate-y-1 text-left group"
@@ -149,7 +170,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
               </div>
             </button>
 
-            {/* Active / Existing Option */}
             <button
               onClick={() => onNavigate('equb-detail')}
               className="bg-slate-950 hover:bg-slate-900 border border-amber-500/30 text-amber-400 p-6 rounded-2xl font-bold text-sm flex flex-col justify-between h-44 shadow-xl cursor-pointer transition transform hover:-translate-y-1 text-left group"
@@ -170,7 +190,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
     );
   }
 
-  // 2️⃣ FORM VIEW: Setup Form
+  // 2️⃣ FORM VIEW
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -260,64 +280,74 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
               </label>
               <select
                 value={frequency}
-                onChange={(e) => setFrequency(e.target.value)}
-                className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-400 transition"
+                onChange={handleFrequencyChange}
+                className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-4 py-3 text-xs text-amber-300 font-bold focus:outline-none focus:border-amber-400 transition"
               >
-                <option value="ዕለታዊ (Daily - 24 ሰዓት)">{lang === 'am' ? 'ዕለታዊ (Daily - 24 ሰዓት)' : 'Daily (24 Hours)'}</option>
-                <option value="ሳምንታዊ (Weekly)">{lang === 'am' ? 'ሳምንታዊ (Weekly)' : 'Weekly'}</option>
-                <option value="ወርሃዊ (Monthly)">{lang === 'am' ? 'ወርሃዊ (Monthly)' : 'Monthly'}</option>
+                <option value="daily">{lang === 'am' ? 'ዕለታዊ (Daily - 24 ሰዓት)' : 'Daily (24 Hours)'}</option>
+                <option value="weekly">{lang === 'am' ? 'ሳምንታዊ (Weekly)' : 'Weekly'}</option>
+                <option value="monthly">{lang === 'am' ? 'ወርሃዊ (Monthly)' : 'Monthly'}</option>
               </select>
             </div>
           </div>
 
-          {/* 🕒 Deposit & Draw Schedule Range Fields */}
+          {/* 🕒 Dynamic Schedule Range Inputs (Changes based on Frequency: Time or Day/Date) */}
           <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-4">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
-              <Clock className="w-4 h-4" />
-              {lang === 'am' ? 'የክፍያ እና የዕጣ ማውጫ ሰዓት ገደቦች (ከ ... እስከ ...)' : 'Payment & Draw Schedule Windows'}
+              {frequency === 'monthly' ? <Calendar className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+              {lang === 'am' 
+                ? (frequency === 'monthly' ? 'የወር የክፍያ እና የዕጣ ማውጫ ቀናት ገደብ (ከ ... እስከ ...)' : frequency === 'weekly' ? 'የሳምንት ቀናት የክፍያ እና የዕጣ ማውጫ ገደብ' : 'የክፍያ እና የዕጣ ማውጫ ሰዓት ገደቦች (ከ ... እስከ ...)')
+                : 'Payment & Draw Schedule Ranges'}
             </label>
 
-            {/* 1. Payment Window Range */}
+            {/* 1. Deposit Range */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-bold text-slate-300 block">
-                {lang === 'am' ? '1. የክፍያ ገቢ ማድረጊያ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):' : '1. Payment Window Range:'}
+                {lang === 'am' 
+                  ? (frequency === 'monthly' ? '1. ብር ገቢ ማድረጊያ የቀናት ገደብ (ለምሳሌ፡ ከ ቀን 1 እስከ ቀን 5):' : frequency === 'weekly' ? '1. ብር ገቢ ማድረጊያ የቀናት ገደብ (ከሰኞ እስከ እሁድ):' : '1. የክፍያ ገቢ ማድረጊያ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):')
+                  : '1. Deposit Range:'}
               </span>
               <div className="grid grid-cols-2 gap-3">
                 <input
-                  type="time"
+                  type={frequency === 'daily' ? 'time' : 'text'}
                   required
-                  value={depositStartTime}
-                  onChange={(e) => setDepositStartTime(e.target.value)}
+                  value={depositStart}
+                  onChange={(e) => setDepositStart(e.target.value)}
+                  placeholder={frequency === 'monthly' ? 'ለምሳሌ፡ ቀን 1' : frequency === 'weekly' ? 'ሰኞ' : '08:00'}
                   className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
                 <input
-                  type="time"
+                  type={frequency === 'daily' ? 'time' : 'text'}
                   required
-                  value={depositEndTime}
-                  onChange={(e) => setDepositEndTime(e.target.value)}
+                  value={depositEnd}
+                  onChange={(e) => setDepositEnd(e.target.value)}
+                  placeholder={frequency === 'monthly' ? 'ለምሳሌ፡ ቀን 5' : frequency === 'weekly' ? 'እሁድ' : '18:00'}
                   className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
               </div>
             </div>
 
-            {/* 2. Lottery Draw Window Range */}
+            {/* 2. Draw Range */}
             <div className="space-y-1.5 pt-1">
               <span className="text-[11px] font-bold text-slate-300 block">
-                {lang === 'am' ? '2. የዕጣ ማውጫ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):' : '2. Lottery Draw Window Range:'}
+                {lang === 'am' 
+                  ? (frequency === 'monthly' ? '2. የዕጣ ማውጫ ቀን (ለምሳሌ፡ በ 6ኛ ቀን):' : frequency === 'weekly' ? '2. የዕጣ ማውጫ ቀን/ሰዓት (ለምሳሌ፡ እሁድ ማታ):' : '2. የዕጣ ማውጫ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):')
+                  : '2. Lottery Draw Range:'}
               </span>
               <div className="grid grid-cols-2 gap-3">
                 <input
-                  type="time"
+                  type={frequency === 'daily' ? 'time' : 'text'}
                   required
-                  value={drawStartTime}
-                  onChange={(e) => setDrawStartTime(e.target.value)}
+                  value={drawStart}
+                  onChange={(e) => setDrawStart(e.target.value)}
+                  placeholder={frequency === 'monthly' ? 'ቀን 6' : frequency === 'weekly' ? 'እሁድ' : '19:00'}
                   className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
                 <input
-                  type="time"
+                  type={frequency === 'daily' ? 'time' : 'text'}
                   required
-                  value={drawEndTime}
-                  onChange={(e) => setDrawEndTime(e.target.value)}
+                  value={drawEnd}
+                  onChange={(e) => setDrawEnd(e.target.value)}
+                  placeholder={frequency === 'monthly' ? 'ቀን 6 ማታ' : frequency === 'weekly' ? 'እሁድ ማታ' : '20:00'}
                   className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
               </div>
@@ -477,9 +507,9 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                 <p>{lang === 'am' ? 'የሲስተም አገልግሎት ክፍያ (' + selectedFeePercent + '%):' : 'System Fee:'} <b className="text-amber-400">{serviceFeeAmount.toFixed(2)} ብር</b></p>
                 <p>{lang === 'am' ? 'ለዕጣ አሸናፊ የሚደርሰው ንጹህ ገንዘብ:' : 'Net Pool for Winner:'} <b className="text-emerald-400">{netPoolForWinner.toLocaleString()} ብር</b></p>
                 <p className="text-amber-300/80 pt-1 text-[11px]">
-                  ⏱ {lang === 'am' 
-                    ? `የክፍያ ሰዓት፡ ከ ${depositStartTime} እስከ ${depositEndTime} | የዕጣ ማውጫ ሰዓት፡ ከ ${drawStartTime} እስከ ${drawEndTime}` 
-                    : `Payment Window: ${depositStartTime} - ${depositEndTime} | Draw Window: ${drawStartTime} - ${drawEndTime}`}
+                  📅 {lang === 'am' 
+                    ? `የክፍያ ገደብ፡ ከ ${depositStart} እስከ ${depositEnd} | የዕጣ ማውጫ፡ ከ ${drawStart} እስከ ${drawEnd}` 
+                    : `Deposit Window: ${depositStart} - ${depositEnd} | Draw Window: ${drawStart} - ${drawEnd}`}
                 </p>
               </div>
             </div>
