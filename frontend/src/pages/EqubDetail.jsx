@@ -276,7 +276,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
           <div className="flex justify-between items-center border-b border-slate-800 pb-3">
             <h3 className="text-sm font-black text-amber-400 flex items-center gap-2">
               <Users className="w-4 h-4" /> 
-              {lang === 'am' ? 'የስሎቶች እና የክፍያ ማረጋገጫ ዝርዝር' : 'Slots & Payment Status'}
+              {lang === 'am' ? 'የስሎቶች እና የክፍያ ማረጋገጫ ዝርዝር' : 'Slots & Payment Status Summary'}
             </h3>
             <span className="text-[10px] bg-slate-950 border border-amber-500/30 text-amber-300 px-3 py-1 rounded-lg font-bold">
               {slots.length} {lang === 'am' ? 'ስሎቶች' : 'Slots'}
@@ -328,7 +328,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                             {role === 'admin' && (
                               <button 
                                 onClick={() => { setEditingSlotId(slot.id); setEditSlotName(slot.name); }}
-                                className="text-amber-400 hover:text-amber-300 p-1"
+                                className="text-amber-400 hover:text-amber-300 p-1 cursor-pointer"
                                 title="Edit Slot Name"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
@@ -341,7 +341,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                           {slot.assignedMember ? (
                             <span className="text-emerald-400 font-bold flex items-center gap-1.5">
                               <UserCheck className="w-3.5 h-3.5 text-amber-400" /> 
-                              {lang === 'am' ? 'የተመደበ አባል' : 'Assigned'}: <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
+                              {lang === 'am' ? 'የተመደበ አባል' : 'Assigned Member'}: <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
                             </span>
                           ) : (
                             <span className="text-slate-500 italic">
@@ -419,7 +419,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                                       <strong className="text-white">{member.name}</strong>
                                       <span className="text-amber-400/80 ml-2 text-[10px]">({member.phone})</span>
                                     </div>
-                                    <span className="text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded text-[10px] border border-amber-500/20">
+                                    <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded text-[10px] border border-amber-500/20">
                                       + {lang === 'am' ? 'አስገባ' : 'Assign'}
                                     </span>
                                   </div>
