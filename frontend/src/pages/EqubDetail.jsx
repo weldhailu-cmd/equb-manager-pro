@@ -26,15 +26,17 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   const [editingSlotId, setEditingSlotId] = useState(null);
   const [editSlotName, setEditSlotName] = useState('');
   
-  // Advanced Member, Edit & Co-Contributor Add State
+  // Advanced Member, Edit & Co-Contributor State
   const [editingMemberSlotId, setEditingMemberSlotId] = useState(null);
   const [selectedMemberPhone, setSelectedMemberPhone] = useState('');
   const [customContributionAmount, setCustomContributionAmount] = useState('');
+  
+  // Per-member custom amounts for AND co-contributors
+  const [memberContributions, setMemberContributions] = useState({});
 
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Translations Dictionary for Dynamic Language Toggle
   const t = {
     am: {
       back: 'ወደ ዋናው ገጽ ተመለስ',
@@ -120,7 +122,8 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
           const initialSlots = (current.slots || []).map(s => ({
             ...s,
             amount: s.amount || targetPrice,
-            coMembers: s.coMembers || []
+            coMembers: s.coMembers || [],
+            memberAmounts: s.memberAmounts || {}
           }));
           setSlots(initialSlots);
         }
@@ -192,6 +195,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
       amount: mainEqubAmount,
       assignedMember: null,
       coMembers: [],
+      memberAmounts: {},
       paidAmount: 0
     };
 
@@ -219,11 +223,16 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   const handleAssignMember = (slotId, member) => {
     const updatedSlots = slots.map(slot => {
       if (slot.id === slotId) {
+        const halfAmount = Math.round(mainEqubAmount / 2);
         return { 
           ...slot, 
           assignedMember: member,
           amount: slot.amount || mainEqubAmount,
-          paidAmount: slot.amount || mainEqubAmount 
+          paidAmount: slot.amount || mainEqubAmount,
+          memberAmounts: {
+            ...slot.memberAmounts,
+            [member.phone]: slot.amount || mainEqubAmount
+          }
         };
       }
       return slot;
@@ -235,18 +244,26 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     saveSlotsToStorage(updatedSlots);
   };
 
-  // Update Member or Edit Contribution Amount
+  // Update Member or Edit Individual Contribution Amounts (AND setup)
   const handleUpdateSlotAssignment = (slotId) => {
     const targetMember = membersList.find(m => m.phone === selectedMemberPhone);
     const newAmount = customContributionAmount ? parseFloat(customContributionAmount) : null;
 
     const updatedSlots = slots.map(slot => {
       if (slot.id === slotId) {
+        const primaryPhone = slot.assignedMember?.phone;
+        const updatedAmounts = { ...(slot.memberAmounts || {}) };
+        
+        if (primaryPhone && newAmount !== null && !isNaN(newAmount)) {
+          updatedAmounts[primaryPhone] = newAmount;
+        }
+
         return { 
           ...slot, 
           assignedMember: targetMember ? targetMember : slot.assignedMember,
           amount: newAmount !== null && !isNaN(newAmount) ? newAmount : slot.amount,
-          paidAmount: newAmount !== null && !isNaN(newAmount) ? newAmount : slot.paidAmount
+          paidAmount: newAmount !== null && !isNaN(newAmount) ? newAmount : slot.paidAmount,
+          memberAmounts: updatedAmounts
         };
       }
       return slot;
@@ -260,7 +277,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     saveSlotsToStorage(updatedSlots);
   };
 
-  // Add Co-Contributor (AND - Mr. A and Mr. B sharing the slot)
+  // Add Co-Contributor (AND - Mr. X and Mr. Y sharing the slot with individual amounts)
   const handleAddCoContributor = (slotId) => {
     const targetMember = membersList.find(m => m.phone === selectedMemberPhone);
     if (!targetMember) {
@@ -274,9 +291,23 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
         if (existingCo.some(m => m.phone === targetMember.phone) || slot.assignedMember?.phone === targetMember.phone) {
           return slot;
         }
+        
+        const totalPeople = 1 + existingCo.length + 1;
+        const splitAmount = Math.round(mainEqubAmount / totalPeople);
+        
+        const updatedAmounts = {
+          [slot.assignedMember.phone]: splitAmount,
+          ...slot.memberAmounts
+        };
+        existingCo.forEach(co => {
+          updatedAmounts[co.phone] = splitAmount;
+        });
+        updatedAmounts[targetMember.phone] = splitAmount;
+
         return {
           ...slot,
-          coMembers: [...existingCo, targetMember]
+          coMembers: [...existingCo, targetMember],
+          memberAmounts: updatedAmounts
         };
       }
       return slot;
@@ -288,10 +319,26 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     saveSlotsToStorage(updatedSlots);
   };
 
+  const handleUpdateCoAmount = (slotId, phone, amt) => {
+    const val = parseFloat(amt) || 0;
+    const updatedSlots = slots.map(slot => {
+      if (slot.id === slotId) {
+        const newAmounts = { ...(slot.memberAmounts || {}), [phone]: val };
+        return {
+          ...slot,
+          memberAmounts: newAmounts
+        };
+      }
+      return slot;
+    });
+    setSlots(updatedSlots);
+    saveSlotsToStorage(updatedSlots);
+  };
+
   const handleRemoveMember = (slotId) => {
     const updatedSlots = slots.map(slot => {
       if (slot.id === slotId) {
-        return { ...slot, assignedMember: null, coMembers: [], paidAmount: 0, amount: mainEqubAmount };
+        return { ...slot, assignedMember: null, coMembers: [], memberAmounts: {}, paidAmount: 0, amount: mainEqubAmount };
       }
       return slot;
     });
@@ -394,7 +441,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
           ) : (
             <div className="space-y-4">
               {slots.map((slot) => {
-                const isPaidFull = slot.assignedMember && (slot.paidAmount >= slot.amount);
+                const isPaidFull = slot.assignedMember;
 
                 return (
                   <div key={slot.id} className="p-4 bg-slate-950/80 border border-amber-500/20 rounded-2xl space-y-3 hover:border-amber-400/50 transition">
@@ -441,43 +488,52 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                           </h4>
                         )}
 
-                        <div className="text-[11px] text-slate-300 mt-1 space-y-1">
+                        <div className="text-[11px] text-slate-300 mt-2 space-y-2">
                           {slot.assignedMember ? (
-                            <div>
-                              <div className="flex flex-wrap items-center gap-1.5 text-emerald-400 font-bold">
-                                <UserCheck className="w-3.5 h-3.5 text-amber-400" /> 
-                                {tr.assignedMember}: 
-                                <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
-                                
-                                {/* AND - Co-Contributors displayed side by side */}
-                                {slot.coMembers && slot.coMembers.map((co, cIdx) => (
-                                  <span key={cIdx} className="bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 text-[10px]">
-                                    AND {co.name} ({co.phone})
-                                  </span>
-                                ))}
-
-                                {role === 'admin' && (
-                                  <button 
-                                    onClick={() => {
-                                      setEditingMemberSlotId(editingMemberSlotId === slot.id ? null : slot.id);
-                                      setCustomContributionAmount(slot.amount);
-                                      setSelectedMemberPhone(slot.assignedMember?.phone || '');
-                                    }}
-                                    className="ml-2 text-[10px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-lg border border-amber-500/30 flex items-center gap-1 cursor-pointer"
-                                  >
-                                    <RefreshCw className="w-3 h-3" /> {tr.editShare}
-                                  </button>
-                                )}
+                            <div className="space-y-2">
+                              {/* Primary Member Display */}
+                              <div className="flex flex-wrap items-center gap-2 text-emerald-400 font-bold bg-slate-900/80 p-2 rounded-xl border border-amber-500/20">
+                                <UserCheck className="w-3.5 h-3.5 text-amber-400" />
+                                <strong className="text-white">{slot.assignedMember.name}</strong> 
+                                <span className="text-amber-300/80 font-mono">({slot.assignedMember.phone})</span>
+                                <span className="text-amber-400 font-mono ml-auto bg-slate-950 px-2 py-0.5 rounded border border-amber-500/30">
+                                  {slot.memberAmounts?.[slot.assignedMember.phone] || Math.round(slot.amount / (1 + (slot.coMembers?.length || 0)))} ETB
+                                </span>
                               </div>
 
-                              {/* Dropdown / Edit Panel with Update & Add Co-Contributor buttons */}
+                              {/* AND Co-Contributors Display */}
+                              {slot.coMembers && slot.coMembers.map((co, cIdx) => (
+                                <div key={cIdx} className="flex flex-wrap items-center gap-2 text-amber-300 font-bold bg-slate-900/80 p-2 rounded-xl border border-amber-500/20">
+                                  <span className="text-xs bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded font-black">AND</span>
+                                  <strong className="text-white">{co.name}</strong> 
+                                  <span className="text-amber-300/80 font-mono">({co.phone})</span>
+                                  <span className="text-amber-400 font-mono ml-auto bg-slate-950 px-2 py-0.5 rounded border border-amber-500/30">
+                                    {slot.memberAmounts?.[co.phone] || Math.round(slot.amount / (1 + slot.coMembers.length))} ETB
+                                  </span>
+                                </div>
+                              ))}
+
+                              {role === 'admin' && (
+                                <button 
+                                  onClick={() => {
+                                    setEditingMemberSlotId(editingMemberSlotId === slot.id ? null : slot.id);
+                                    setCustomContributionAmount(slot.amount);
+                                    setSelectedMemberPhone(slot.assignedMember?.phone || '');
+                                  }}
+                                  className="text-[10px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-3 py-1.5 rounded-lg border border-amber-500/30 flex items-center gap-1.5 cursor-pointer font-bold shadow-sm mt-1"
+                                >
+                                  <RefreshCw className="w-3 h-3" /> {tr.editShare}
+                                </button>
+                              )}
+
+                              {/* Dropdown / Edit Panel for AND Co-contributors & Custom Amounts */}
                               {editingMemberSlotId === slot.id && (
-                                <div className="mt-3 p-3 bg-slate-900 border border-amber-500/40 rounded-xl space-y-3 shadow-inner">
+                                <div className="mt-3 p-3.5 bg-slate-900 border border-amber-500/40 rounded-xl space-y-3 shadow-inner">
                                   <p className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
                                     <Sliders className="w-3.5 h-3.5" /> {tr.manageMemberTitle}
                                   </p>
                                   
-                                  <div className="space-y-2">
+                                  <div className="space-y-2.5">
                                     <div>
                                       <label className="text-[10px] text-slate-400 block mb-1">{tr.selectMemberLabel}</label>
                                       <div className="flex gap-2">
@@ -496,7 +552,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                                         <button
                                           type="button"
                                           onClick={() => handleAddCoContributor(slot.id)}
-                                          className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-black cursor-pointer shadow-md shrink-0 flex items-center gap-1"
+                                          className="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-[11px] font-black cursor-pointer shadow-md shrink-0 flex items-center gap-1"
                                           title="Add Co-contributor (AND)"
                                         >
                                           <UserPlus className="w-3.5 h-3.5" /> {tr.addMemberBtn}
@@ -504,29 +560,39 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                                       </div>
                                     </div>
 
-                                    <div>
-                                      <label className="text-[10px] text-slate-400 block mb-1">{tr.customAmountLabel}</label>
-                                      <input
-                                        type="number"
-                                        value={customContributionAmount}
-                                        onChange={(e) => setCustomContributionAmount(e.target.value)}
-                                        placeholder="1000"
-                                        className="bg-slate-950 border border-amber-500/30 text-xs text-amber-400 font-bold rounded-lg px-3 py-2 w-full focus:outline-none focus:border-amber-400"
-                                      />
+                                    {/* Individual Amount Editors for each member in this slot */}
+                                    <div className="space-y-2 pt-2 border-t border-slate-800">
+                                      <label className="text-[10px] text-amber-400 font-bold block">የእያንዳንዱ አባል የብር መጠን (ETB):</label>
+                                      
+                                      <div className="flex items-center justify-between bg-slate-950 p-2 rounded-lg border border-slate-800 text-xs">
+                                        <span className="text-white">{slot.assignedMember.name}</span>
+                                        <input 
+                                          type="number"
+                                          value={slot.memberAmounts?.[slot.assignedMember.phone] ?? slot.amount}
+                                          onChange={(e) => handleUpdateCoAmount(slot.id, slot.assignedMember.phone, e.target.value)}
+                                          className="bg-slate-900 border border-amber-500/30 text-amber-400 font-bold text-xs rounded px-2 py-1 w-24 text-right"
+                                        />
+                                      </div>
+
+                                      {slot.coMembers && slot.coMembers.map((co, idx) => (
+                                        <div key={idx} className="flex items-center justify-between bg-slate-950 p-2 rounded-lg border border-slate-800 text-xs">
+                                          <span className="text-white">{co.name}</span>
+                                          <input 
+                                            type="number"
+                                            value={slot.memberAmounts?.[co.phone] ?? 0}
+                                            onChange={(e) => handleUpdateCoAmount(slot.id, co.phone, e.target.value)}
+                                            className="bg-slate-900 border border-amber-500/30 text-amber-400 font-bold text-xs rounded px-2 py-1 w-24 text-right"
+                                          />
+                                        </div>
+                                      ))}
                                     </div>
 
-                                    <div className="flex gap-2 pt-1">
-                                      <button
-                                        onClick={() => handleUpdateSlotAssignment(slot.id)}
-                                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-1.5 rounded-lg text-[11px] font-black cursor-pointer shadow-md"
-                                      >
-                                        {tr.updateBtn}
-                                      </button>
+                                    <div className="flex gap-2 pt-2">
                                       <button
                                         onClick={() => setEditingMemberSlotId(null)}
-                                        className="bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-[11px] cursor-pointer"
+                                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-1.5 rounded-lg text-[11px] font-black cursor-pointer shadow-md"
                                       >
-                                        {tr.cancel}
+                                        {tr.save}
                                       </button>
                                     </div>
                                   </div>
@@ -543,17 +609,10 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
 
                       <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                         {slot.assignedMember && (
-                          isPaidFull ? (
-                            <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shadow-md">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 
-                              {tr.readyForDraw}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] bg-amber-950/90 text-amber-300 border border-amber-600 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shadow-md">
-                              <Clock className="w-3.5 h-3.5 text-amber-400" /> 
-                              {tr.pendingPayment}
-                            </span>
-                          )
+                          <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shadow-md">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 
+                            {tr.readyForDraw}
+                          </span>
                         )}
 
                         {slot.assignedMember && role === 'admin' && (
