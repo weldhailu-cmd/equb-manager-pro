@@ -46,7 +46,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
       slotsListTitle: 'የስሎቶች እና የክፍያ ማረጋገጫ ዝርዝር',
       slotsCount: 'ስሎቶች',
       noSlots: 'እስካሁን የተፈጠረ ስሎት የለም።',
-      assignedMember: 'የተመደበ አባል',
+      assignedMember: 'የተመደቡ አባላት (AND - በጋራ)',
       unassigned: 'አባል አልተመደበለትም (ክፍት)',
       readyForDraw: 'ለዕጣ ዝግጁ ነው',
       pendingPayment: 'ክፍያ ያልተሟላ (Pending)',
@@ -57,8 +57,8 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
       searchAssign: 'አባል ፈልጎ አስገባ (Search & Assign)',
       close: 'ዝጋ',
       editShare: 'አባል እና መዋጮ አስተካክል (Edit)',
-      manageMemberTitle: 'አባል ማስተዳደሪያ / ድርሻ ማስተላለፍ:',
-      selectMemberLabel: 'አባል ምረጥ (Dropdown):',
+      manageMemberTitle: 'አባል ማስተዳደሪያ / (AND) በጋራ መዋጮ:',
+      selectMemberLabel: 'ተጨማሪ አባል ምረጥ (Dropdown):',
       customAmountLabel: 'የግለሰብ መዋጮ መጠን (ETB):',
       selectPlaceholder: 'አባል ይምረጡ...',
       updateBtn: 'አዘምን',
@@ -74,7 +74,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
       slotsListTitle: 'Slots & Payment Status Summary',
       slotsCount: 'Slots',
       noSlots: 'No slots created yet.',
-      assignedMember: 'Assigned Member',
+      assignedMember: 'Assigned Members (AND - Co-paid)',
       unassigned: 'Unassigned (Open)',
       readyForDraw: 'Ready for Draw',
       pendingPayment: 'Payment Incomplete',
@@ -85,7 +85,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
       searchAssign: 'Search & Assign Member',
       close: 'Close',
       editShare: 'Edit Member & Contribution',
-      manageMemberTitle: 'Manage Member / Transfer Share:',
+      manageMemberTitle: 'Manage Members / (AND) Co-contribution:',
       selectMemberLabel: 'Select Member (Dropdown):',
       customAmountLabel: 'Custom Contribution Amount (ETB):',
       selectPlaceholder: 'Select member...',
@@ -260,7 +260,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     saveSlotsToStorage(updatedSlots);
   };
 
-  // Add Co-Contributor (Mr. B alongside Mr. A)
+  // Add Co-Contributor (AND - Mr. A and Mr. B sharing the slot)
   const handleAddCoContributor = (slotId) => {
     const targetMember = membersList.find(m => m.phone === selectedMemberPhone);
     if (!targetMember) {
@@ -446,11 +446,13 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                             <div>
                               <div className="flex flex-wrap items-center gap-1.5 text-emerald-400 font-bold">
                                 <UserCheck className="w-3.5 h-3.5 text-amber-400" /> 
-                                {tr.assignedMember}: <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
+                                {tr.assignedMember}: 
+                                <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
                                 
+                                {/* AND - Co-Contributors displayed side by side */}
                                 {slot.coMembers && slot.coMembers.map((co, cIdx) => (
                                   <span key={cIdx} className="bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 text-[10px]">
-                                    + {co.name} ({co.phone})
+                                    AND {co.name} ({co.phone})
                                   </span>
                                 ))}
 
@@ -490,12 +492,12 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                                           ))}
                                         </select>
 
-                                        {/* ➕ Add Co-Contributor Button */}
+                                        {/* ➕ Add Co-Contributor (AND) Button */}
                                         <button
                                           type="button"
                                           onClick={() => handleAddCoContributor(slot.id)}
                                           className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[11px] font-black cursor-pointer shadow-md shrink-0 flex items-center gap-1"
-                                          title="Add Co-contributor"
+                                          title="Add Co-contributor (AND)"
                                         >
                                           <UserPlus className="w-3.5 h-3.5" /> {tr.addMemberBtn}
                                         </button>
