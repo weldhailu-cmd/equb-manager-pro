@@ -17,10 +17,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   const [slots, setSlots] = useState([]);
   const [membersList, setMembersList] = useState([]);
   
-  // Slot creation state
   const [slotName, setSlotName] = useState('');
-  
-  // Autocomplete & Search States
   const [activeSlotId, setActiveSlotId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -46,13 +43,11 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
 
         if (current) {
           setEqubData(current);
-          
           const targetPrice = current.contributionAmount || current.contribution_amount || 1000;
           const initialSlots = (current.slots || []).map(s => ({
             ...s,
             amount: targetPrice
           }));
-          
           setSlots(initialSlots);
         }
       } catch (e) {
@@ -82,7 +77,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
       if (!targetData) return;
 
       const dataToSave = { ...targetData, slots: updatedSlots };
-
       const stored = localStorage.getItem('yop_saved_equbs') || localStorage.getItem('all_equbs');
       let parsedList = stored ? JSON.parse(stored) : [];
       
@@ -143,8 +137,8 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     if (currentAssignments >= allowedShares) {
       setErrorMsg(
         lang === 'am'
-          ? `⚠️ ይቅርታ! ${member.name} ከዚህ በፊት በሌላ ስሎት ተመድቧል። ተጨማሪ ድርሻ/መዋጮ ከሌለው በአንድ ስሎት ብቻ ይገደባል።`
-          : `⚠️ Restricted! ${member.name} is already assigned to a slot. Single assignment rule enforced.`
+          ? `⚠️ ይቅርታ! ${member.name} ከዚህ በፊት በሌላ ስሎት ተመድቧል።`
+          : `⚠️ Restricted! ${member.name} is already assigned to a slot.`
       );
       return;
     }
@@ -213,7 +207,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
         </button>
         <span className="text-xs text-amber-400 bg-[#0d1322] px-3.5 py-2 rounded-xl border border-amber-500/30 font-bold flex items-center gap-2 shadow-md">
           <ShieldCheck className="w-4 h-4 text-amber-400" />
-          {equbData?.name || 'ዮጵ ዲጂታል እቁብ'} | {lang === 'am' ? 'የዕቁብ መጠን' : 'Amount'}: <strong className="text-white">{mainEqubAmount} ETB</strong>
+          {equbData?.name || (lang === 'am' ? 'ዮጵ ዲጂታል እቁብ' : 'Yop Digital Equb')} | {lang === 'am' ? 'የዕቁብ መጠን' : 'Amount'}: <strong className="text-white">{mainEqubAmount} ETB</strong>
         </span>
       </div>
 
@@ -298,7 +292,9 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                               {lang === 'am' ? 'የተመደበ አባል' : 'Assigned'}: <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
                             </span>
                           ) : (
-                            <span className="text-slate-500 italic">{lang === 'am' ? 'አባል አልተመደበለትም (ክፍት)' : 'Unassigned (Open)'}</span>
+                            <span className="text-slate-500 italic">
+                              {lang === 'am' ? 'አባል አልተመደበለትም (ክፍት)' : 'Unassigned (Open)'}
+                            </span>
                           )}
                         </p>
                       </div>
