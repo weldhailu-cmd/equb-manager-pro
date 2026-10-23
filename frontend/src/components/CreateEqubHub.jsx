@@ -13,14 +13,12 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   
   const [frequency, setFrequency] = useState('weekly');
 
-  // Schedule States
   const [depositStart, setDepositStart] = useState('ሰኞ (Monday)');
   const [depositEnd, setDepositEnd] = useState('ቅዳሜ (Saturday)');
   const [drawDay, setDrawDay] = useState('እሁድ (Sunday)');
   const [drawTimeStart, setDrawTimeStart] = useState('05:00'); 
   const [drawTimeEnd, setDrawTimeEnd] = useState('06:00');     
 
-  // Passwords & Recovery
   const [adminPassword, setAdminPassword] = useState('');
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
   const [memberPassword, setMemberPassword] = useState('');
@@ -104,6 +102,13 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       ? `የክፍያ ቀናት: ከ ${depositStart} እስከ ${depositEnd} | ዕጣ ማውጫ ቀን: ${drawDay} (ሰዓት: ከ ${drawTimeStart} እስከ ${drawTimeEnd})`
       : `የክፍያ ቀናት: ከ ${depositStart} እስከ ${depositEnd} | ዕጣ ማውጫ ቀን: ${drawDay} (ሰዓት: ከ ${drawTimeStart} እስከ ${drawTimeEnd})`;
 
+    const generatedSlots = Array.from({ length: 20 }, (_, i) => ({
+      id: i + 1,
+      member: null,
+      status: 'available',
+      amountPaid: 0
+    }));
+
     const newEqubObj = {
       id: "equb_" + Date.now(),
       name: equbName,
@@ -117,17 +122,17 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       securityQuestion,
       securityAnswer: securityAnswer.trim().toLowerCase(),
       address: cityAddress,
-      slots: Array.from({ length: 20 }, (_, i) => ({ id: i + 1, member: null, status: 'available' })),
+      slots: generatedSlots,
       createdAt: new Date().toISOString()
     };
 
-    // Save to all possible localStorage keys to prevent mismatch
+    // Save across all keys to ensure detail page reads it instantly
     const existingSaved = JSON.parse(localStorage.getItem('yop_saved_equbs') || '[]');
-    const existingAll = JSON.parse(localStorage.getItem('all_equbs') || '[]');
-    
     const updated = [newEqubObj, ...existingSaved];
+    
     localStorage.setItem('yop_saved_equbs', JSON.stringify(updated));
-    localStorage.setItem('all_equbs', JSON.stringify([newEqubObj, ...existingAll]));
+    localStorage.setItem('all_equbs', JSON.stringify(updated));
+    localStorage.setItem('yop_current_active_equb', JSON.stringify(newEqubObj));
     localStorage.setItem('current_equb', JSON.stringify(newEqubObj));
 
     try {
