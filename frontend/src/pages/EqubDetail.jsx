@@ -12,7 +12,7 @@ import {
   AlertCircle 
 } from 'lucide-react';
 
-export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am' }) {
+export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate, lang = 'am' }) {
   const [equbData, setEqubData] = useState(null);
   const [slots, setSlots] = useState([]);
   const [membersList, setMembersList] = useState([]);
@@ -25,11 +25,9 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // 1. Automated Pricing Derived Directly From Main Equb Configuration
   const mainEqubAmount = equbData?.contributionAmount || equbData?.contribution_amount || equbData?.amount || 1000;
 
   useEffect(() => {
-    // Load Parent Equb Details from all possible synced keys across Mini App, Web & Telegram Webview
     const storedEqubs = 
       localStorage.getItem('yop_saved_equbs') || 
       localStorage.getItem('all_equbs') || 
@@ -41,7 +39,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
         let current = null;
 
         if (Array.isArray(parsed)) {
-          // If equbId is passed, find it; otherwise pick the latest created one
           current = equbId ? parsed.find(item => String(item.id) === String(equbId)) : parsed[0];
         } else if (typeof parsed === 'object' && parsed !== null) {
           current = parsed;
@@ -51,13 +48,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
           setEqubData(current);
           
           const targetPrice = current.contributionAmount || current.contribution_amount || 1000;
-          const initialSlots = (current.slots || Array.from({ length: 20 }, (_, i) => ({
-            id: i + 1,
-            name: `ስሎት #${i + 1}`,
-            amount: targetPrice,
-            assignedMember: null,
-            paidAmount: 0
-          }))).map(s => ({
+          const initialSlots = (current.slots || []).map(s => ({
             ...s,
             amount: targetPrice
           }));
@@ -69,7 +60,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
       }
     }
 
-    // Load Global Member Registry
     const storedMembers = localStorage.getItem('yop_members') || localStorage.getItem('yop_registered_members');
     if (storedMembers) {
       try {
@@ -86,7 +76,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
     }
   }, [equbId]);
 
-  // Save changes back to LocalStorage across all synced keys (Web + Mini App + Bot persistence)
   const saveSlotsToStorage = (updatedSlots, updatedEqubData = null) => {
     try {
       const targetData = updatedEqubData || equbData;
@@ -94,7 +83,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
 
       const dataToSave = { ...targetData, slots: updatedSlots };
 
-      // Update in saved array list
       const stored = localStorage.getItem('yop_saved_equbs') || localStorage.getItem('all_equbs');
       let parsedList = stored ? JSON.parse(stored) : [];
       
@@ -112,7 +100,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
       localStorage.setItem('yop_current_active_equb', JSON.stringify(dataToSave));
       localStorage.setItem('current_equb', JSON.stringify(dataToSave));
 
-      // Sync with Backend API if active
       fetch("http://127.0.0.1:5000/api/equbs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -124,7 +111,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
     }
   };
 
-  // 2. Automated Slot Creation
   const handleCreateSlot = (e) => {
     e.preventDefault();
     if (!slotName.trim()) {
@@ -147,7 +133,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
     saveSlotsToStorage(updatedSlots);
   };
 
-  // 3. Strict Member Assignment & Single-Slot Validation Rule
   const handleAssignMember = (slotId, member) => {
     const currentAssignments = slots.filter(
       slot => slot.assignedMember && (slot.assignedMember.phone === member.phone || slot.assignedMember.id === member.id)
@@ -199,6 +184,16 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
     saveSlotsToStorage(updatedSlots);
   };
 
+  const handleReturnHome = () => {
+    if (onNavigate) {
+      onNavigate('home');
+    } else if (onBack) {
+      onBack();
+    } else {
+      window.location.reload();
+    }
+  };
+
   const filteredMembers = membersList.filter(m => 
     (m.name && m.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
     (m.phone && m.phone.includes(searchTerm))
@@ -210,7 +205,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
       {/* Navigation Header */}
       <div className="max-w-4xl mx-auto flex items-center justify-between border-b border-amber-500/20 pb-4">
         <button
-          onClick={onBack}
+          onClick={handleReturnHome}
           className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -224,7 +219,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
 
       <div className="max-w-4xl mx-auto space-y-6">
 
-        {/* Global Validation Alert Banner */}
         {errorMsg && (
           <div className="p-4 bg-red-950/90 border border-red-600 rounded-2xl text-red-200 text-xs font-bold flex items-center gap-3 shadow-2xl">
             <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
@@ -345,7 +339,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, lang = 'am'
                       </div>
                     </div>
 
-                    {/* Member Search & Autocomplete Selection */}
                     {role === 'admin' && !slot.assignedMember && (
                       <div className="pt-2 border-t border-slate-800">
                         {activeSlotId === slot.id ? (
