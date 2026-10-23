@@ -12,9 +12,13 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [cityAddress, setCityAddress] = useState('ሞላሌ');
   const [amount, setAmount] = useState('200');
   
-  // Deposit Deadline & Draw Time
-  const [depositDeadlineTime, setDepositDeadlineTime] = useState('18:00');
-  const [drawTime, setDrawTime] = useState('20:00');
+  // 🕒 Payment Range Window (ከስንት ሰዓት እስከ ስንት ሰዓት)
+  const [depositStartTime, setDepositStartTime] = useState('08:00');
+  const [depositEndTime, setDepositEndTime] = useState('18:00');
+
+  // 🎲 Draw Range Window (ከስንት ሰዓት እስከ ስንት ሰዓት)
+  const [drawStartTime, setDrawStartTime] = useState('20:00');
+  const [drawEndTime, setDrawEndTime] = useState('20:30');
   
   // Passwords & Recovery
   const [adminPassword, setAdminPassword] = useState('');
@@ -59,8 +63,10 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       contributionAmount: numericAmount,
       frequency,
       timeConfig: {
-        depositDeadline: depositDeadlineTime,
-        drawTime: drawTime
+        depositStart: depositStartTime,
+        depositEnd: depositEndTime,
+        drawStart: drawStartTime,
+        drawEnd: drawEndTime
       },
       feePercent: selectedFeePercent,
       adminPassword,
@@ -85,8 +91,8 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
           name: newEqubObj.name,
           amount: `${numericAmount} ETB`,
           cycle: frequency,
-          depositDeadline: depositDeadlineTime,
-          drawTime: drawTime,
+          depositRange: `${depositStartTime} - ${depositEndTime}`,
+          drawRange: `${drawStartTime} - ${drawEndTime}`,
           address: cityAddress
         })
       });
@@ -264,37 +270,55 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Deposit Deadline & Draw Time */}
-          <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-3">
+          {/* 🕒 Deposit & Draw Schedule Range Fields */}
+          <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-4">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
-              {lang === 'am' ? 'የክፍያ ማብቂያ እና የዕጣ ማውጫ ሰዓቶች' : 'Payment Deadline & Draw Schedule'}
+              {lang === 'am' ? 'የክፍያ እና የዕጣ ማውጫ ሰዓት ገደቦች (ከ ... እስከ ...)' : 'Payment & Draw Schedule Windows'}
             </label>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                  {lang === 'am' ? 'የክፍያ ማብቂያ ሰዓት (Payment Deadline)' : 'Payment Deadline Time'}
-                </label>
+            {/* 1. Payment Window Range */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold text-slate-300 block">
+                {lang === 'am' ? '1. የክፍያ ገቢ ማድረጊያ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):' : '1. Payment Window Range:'}
+              </span>
+              <div className="grid grid-cols-2 gap-3">
                 <input
                   type="time"
                   required
-                  value={depositDeadlineTime}
-                  onChange={(e) => setDepositDeadlineTime(e.target.value)}
-                  className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                  value={depositStartTime}
+                  onChange={(e) => setDepositStartTime(e.target.value)}
+                  className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                />
+                <input
+                  type="time"
+                  required
+                  value={depositEndTime}
+                  onChange={(e) => setDepositEndTime(e.target.value)}
+                  className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                  {lang === 'am' ? 'የዕጣ ማውጫ ሰዓት (Lottery Draw Time)' : 'Lottery Draw Time'}
-                </label>
+            {/* 2. Lottery Draw Window Range */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-[11px] font-bold text-slate-300 block">
+                {lang === 'am' ? '2. የዕጣ ማውጫ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):' : '2. Lottery Draw Window Range:'}
+              </span>
+              <div className="grid grid-cols-2 gap-3">
                 <input
                   type="time"
                   required
-                  value={drawTime}
-                  onChange={(e) => setDrawTime(e.target.value)}
-                  className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                  value={drawStartTime}
+                  onChange={(e) => setDrawStartTime(e.target.value)}
+                  className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                />
+                <input
+                  type="time"
+                  required
+                  value={drawEndTime}
+                  onChange={(e) => setDrawEndTime(e.target.value)}
+                  className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
               </div>
             </div>
@@ -450,10 +474,12 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
               </p>
               <div className="text-slate-300 space-y-1 pt-1 font-mono">
                 <p>{lang === 'am' ? 'ግምታዊ ጠቅላላ መጠን (በ 20 አባላት):' : 'Estimated Total Pool:'} <b className="text-white">{totalPool.toLocaleString()} ብር</b></p>
-                <p>{lang === 'am' ? 'የሲስተም አገልግሎት ክፍያ (' + selectedFeePercent + '%):' : 'System Fee:'} <b className="text-amber-400">{serviceFeeAmount.toFixed(2)} ብр</b></p>
+                <p>{lang === 'am' ? 'የሲስተም አገልግሎት ክፍያ (' + selectedFeePercent + '%):' : 'System Fee:'} <b className="text-amber-400">{serviceFeeAmount.toFixed(2)} ብር</b></p>
                 <p>{lang === 'am' ? 'ለዕጣ አሸናፊ የሚደርሰው ንጹህ ገንዘብ:' : 'Net Pool for Winner:'} <b className="text-emerald-400">{netPoolForWinner.toLocaleString()} ብር</b></p>
                 <p className="text-amber-300/80 pt-1 text-[11px]">
-                  ⏱ {lang === 'am' ? `የክፍያ ማብቂያ ሰዓት፡ ${depositDeadlineTime} | የዕጣ ማውጫ ሰዓት፡ ${drawTime}` : `Deadline: ${depositDeadlineTime} | Draw Time: ${drawTime}`}
+                  ⏱ {lang === 'am' 
+                    ? `የክፍያ ሰዓት፡ ከ ${depositStartTime} እስከ ${depositEndTime} | የዕጣ ማውጫ ሰዓት፡ ከ ${drawStartTime} እስከ ${drawEndTime}` 
+                    : `Payment Window: ${depositStartTime} - ${depositEndTime} | Draw Window: ${drawStartTime} - ${drawEndTime}`}
                 </p>
               </div>
             </div>
