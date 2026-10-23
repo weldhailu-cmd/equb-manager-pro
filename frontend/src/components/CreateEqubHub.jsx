@@ -7,7 +7,7 @@ import {
 export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [hubView, setHubView] = useState('select');
 
-  const [equbName, setEqubName] = useState(lang === 'am' ? 'የሳምንታዊ 500 ብር እቁብ' : 'Weekly 500 ETB Equb');
+  const [equbName, setEqubName] = useState(lang === 'am' ? 'የሙከራ 500 ብር እቁብ' : 'Test 500 ETB Equb');
   const [cityAddress, setCityAddress] = useState('ሞላሌ');
   const [amount, setAmount] = useState('500');
   
@@ -17,20 +17,23 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [depositStart, setDepositStart] = useState('ሰኞ (Monday)');
   const [depositEnd, setDepositEnd] = useState('ቅዳሜ (Saturday)');
   const [drawDay, setDrawDay] = useState('እሁድ (Sunday)');
-  const [drawTimeStart, setDrawTimeStart] = useState('17:00'); 
-  const [drawTimeEnd, setDrawTimeEnd] = useState('18:00');     
+  const [drawTimeStart, setDrawTimeStart] = useState('05:00'); 
+  const [drawTimeEnd, setDrawTimeEnd] = useState('06:00');     
 
-  // Passwords & Recovery
+  // Passwords & Recovery (Added Confirm Admin Password)
   const [adminPassword, setAdminPassword] = useState('');
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
   const [memberPassword, setMemberPassword] = useState('');
+  
   const [showAdminPass, setShowAdminPass] = useState(false);
+  const [showConfirmAdminPass, setShowConfirmAdminPass] = useState(false);
   const [showMemberPass, setShowMemberPass] = useState(false);
   
-  const [securityQuestion, setSecurityQuestion] = useState(lang === 'am' ? 'የመጀመሪያ ትምህርት ቤትዎ ስም ማን ነው?' : 'First school name?');
+  // Improved memorable security questions
+  const [securityQuestion, setSecurityQuestion] = useState(lang === 'am' ? 'በጣም የሚወዱት ዕድለኛ ቁጥር ስንት ነው?' : 'What is your favorite lucky number?');
   const [securityAnswer, setSecurityAnswer] = useState('');
   const [showSecurityAnswer, setShowSecurityAnswer] = useState(false);
 
-  // Fee rates: 0.006 (0.6% -> 60 ETB on 10k), 0.012 (1.2% -> 120 ETB on 10k), 0.024 (2.4% -> 240 ETB on 10k)
   const [selectedFeeRate, setSelectedFeeRate] = useState(0.012);
 
   const numericAmount = parseFloat(amount) || 0;
@@ -63,14 +66,14 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       setDepositStart('ሰኞ (Monday)');
       setDepositEnd('ቅዳሜ (Saturday)');
       setDrawDay('እሁድ (Sunday)');
-      setDrawTimeStart('17:00');
-      setDrawTimeEnd('18:00');
+      setDrawTimeStart('05:00');
+      setDrawTimeEnd('06:00');
     } else if (val === 'monthly') {
       setDepositStart('ቀን 1');
       setDepositEnd('ቀን 5');
       setDrawDay('ቀን 6');
-      setDrawTimeStart('17:00');
-      setDrawTimeEnd('18:00');
+      setDrawTimeStart('05:00');
+      setDrawTimeEnd('06:00');
     }
   };
 
@@ -86,6 +89,12 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate passwords match
+    if (adminPassword !== confirmAdminPassword) {
+      alert(lang === 'am' ? 'የአስተዳዳሪ የይለፍ ቃሎች እርስ በእርስ አልተመሳሰሉም! እባክዎ እንደገና ይፈትሹ።' : 'Admin passwords do not match!');
+      return;
+    }
 
     if (!securityAnswer.trim()) {
       alert(lang === 'am' ? 'እባክዎ አድሚን ፓስወርድ ሲረሳ የሚሆን የሚስጥር መልስ ያስገቡ!' : 'Please provide a security answer.');
@@ -266,7 +275,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1">
-                {lang === 'am' ? 'የዋና መጠን (በ 100 ወይም 200 ብር እጥፍ) *' : 'Contribution Amount *'}
+                {lang === 'am' ? 'የዋና መጠን (በ 100 ወይም 500 ብር እጥፍ) *' : 'Contribution Amount *'}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -497,7 +506,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Service Fee Percentage Options (0.6%, 1.2%, 2.4%) */}
+          {/* Service Fee Percentage Options */}
           <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-3">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <Percent className="w-4 h-4" />
@@ -546,11 +555,12 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Passwords Section with Confirm Admin Password */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
                 <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-                {lang === 'am' ? 'የአስተዳዳሪ የይለፍ ቃል (Admin Password) *' : 'Admin Password *'}
+                {lang === 'am' ? 'የአስተዳዳሪ ፓስወርድ *' : 'Admin Password *'}
               </label>
               <div className="relative">
                 <input
@@ -574,7 +584,31 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
                 <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-                {lang === 'am' ? 'የአባል የይለፍ ቃል (Member Password) *' : 'Member Password *'}
+                {lang === 'am' ? 'ፓስወርድ ድጋሚ ያረጋግጡ *' : 'Confirm Password *'}
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmAdminPass ? "text" : "password"}
+                  required
+                  value={confirmAdminPassword}
+                  onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-4 py-3 pr-10 text-xs text-amber-400 font-mono focus:outline-none focus:border-amber-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmAdminPass(!showConfirmAdminPass)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-amber-400 cursor-pointer"
+                >
+                  {showConfirmAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
+                <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                {lang === 'am' ? 'የአባል የይለፍ ቃል *' : 'Member Password *'}
               </label>
               <div className="relative">
                 <input
@@ -596,6 +630,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
+          {/* Improved Memorable Security Questions */}
           <div className="bg-slate-950/60 border border-amber-500/30 p-4 rounded-2xl space-y-3">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4" />
@@ -609,9 +644,10 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                   onChange={(e) => setSecurityQuestion(e.target.value)}
                   className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-400"
                 >
-                  <option value="የመጀመሪያ ትምህርት ቤትዎ ስም ማን ነው?">{lang === 'am' ? 'የመጀመሪያ ትምህርት ቤትዎ ስም ማን ነው?' : 'First school name?'}</option>
-                  <option value="የምትወደው ወይም የፍቅር ስምህ (Love Name) ማን ነው?">{lang === 'am' ? 'የምትወደው ወይም የፍቅር ስምህ (Love Name) ማን ነው?' : 'Favorite / Love Name?'}</option>
-                  <option value="የምትወደው ቁጥር ስንት ነው?">{lang === 'am' ? 'የምትወደው ቁጥር ስንት ነው?' : 'Favorite number?'}</option>
+                  <option value="በጣም የሚወዱት ዕድለኛ ቁጥር ስንት ነው?">{lang === 'am' ? 'በጣም የሚወዱት ዕድለኛ ቁጥር ስንት ነው?' : 'Favorite lucky number?'}</option>
+                  <option value="የተወለዱበት ወር (Month) ማነው?">{lang === 'am' ? 'የተወለዱበት ወር (Month) ማነው?' : 'Birth month?'}</option>
+                  <option value="የመጀመሪያ የቤት እንስሳ ስም ማን ነበር?">{lang === 'am' ? 'የመጀመሪያ የቤት እንስሳ ስም ማን ነበር?' : 'First pet name?'}</option>
+                  <option value="የምትወዱት የስፖርት ቡድን ስም ማን ነው?">{lang === 'am' ? 'የምትወዱት የስፖርት ቡድን ስም ማን ነው?' : 'Favorite sports team?'}</option>
                 </select>
               </div>
 
@@ -622,7 +658,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                     required
                     value={securityAnswer}
                     onChange={(e) => setSecurityAnswer(e.target.value)}
-                    placeholder={lang === 'am' ? 'መልስ ያስገቡ...' : 'Enter answer...'}
+                    placeholder={lang === 'am' ? 'ሚስጥር መልስ ያስገቡ...' : 'Enter security answer...'}
                     className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3 py-2.5 pr-10 text-xs text-slate-200 focus:outline-none focus:border-amber-400"
                   />
                   <button
