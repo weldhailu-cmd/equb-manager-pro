@@ -11,17 +11,13 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [cityAddress, setCityAddress] = useState('ሞላሌ');
   const [amount, setAmount] = useState('200');
   
-  // Frequency State: 'daily', 'weekly', 'monthly'
   const [frequency, setFrequency] = useState('monthly');
 
-  // Time / Date Range States based on Frequency
-  // Daily -> Times (e.g. 08:00 to 18:00)
-  // Weekly -> Days (e.g. 'ሰኞ' to 'እሁድ')
-  // Monthly -> Day numbers (e.g. 1 to 5 for deposit, 6 for draw)
-  const [depositStart, setDepositStart] = useState('08:00');
-  const [depositEnd, setDepositEnd] = useState('18:00');
-  const [drawStart, setDrawStart] = useState('19:00');
-  const [drawEnd, setDrawEnd] = useState('20:00');
+  // Deposit & Draw Range States
+  const [depositStart, setDepositStart] = useState('ቀን 1');
+  const [depositEnd, setDepositEnd] = useState('ቀን 5');
+  const [drawStart, setDrawStart] = useState('ቀን 6 (06:00 AM)');
+  const [drawEnd, setDrawEnd] = useState('ቀን 6 (06:00 PM)');
 
   // Passwords & Recovery
   const [adminPassword, setAdminPassword] = useState('');
@@ -44,22 +40,21 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const handleFrequencyChange = (e) => {
     const val = e.target.value;
     setFrequency(val);
-    // Set smart defaults based on frequency selection
     if (val === 'daily') {
-      setDepositStart('08:00');
-      setDepositEnd('18:00');
-      setDrawStart('19:00');
-      setDrawEnd('20:00');
+      setDepositStart('08:00 AM');
+      setDepositEnd('06:00 PM');
+      setDrawStart('07:00 PM');
+      setDrawEnd('08:00 PM');
     } else if (val === 'weekly') {
-      setDepositStart('ሰኞ (Monday)');
-      setDepositEnd('እሁድ (Sunday)');
-      setDrawStart('እሁድ ከቀኑ 6:00');
-      setDrawEnd('እሁድ ማታ');
+      setDepositStart('ሰኞ');
+      setDepositEnd('እሁድ');
+      setDrawStart('እሁድ 06:00 AM');
+      setDrawEnd('እሁድ 06:00 PM');
     } else if (val === 'monthly') {
       setDepositStart('ቀን 1');
       setDepositEnd('ቀን 5');
-      setDrawStart('ቀን 6');
-      setDrawEnd('ቀን 6 ማታ');
+      setDrawStart('ቀን 6 (06:00 AM)');
+      setDrawEnd('ቀን 6 (06:00 PM)');
     }
   };
 
@@ -126,7 +121,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
     if (onNavigate) onNavigate('equb-detail');
   };
 
-  // 1️⃣ CHOICE VIEW
   if (hubView === 'select') {
     return (
       <div className="max-w-3xl mx-auto p-4 md:p-6 space-y-6">
@@ -190,7 +184,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
     );
   }
 
-  // 2️⃣ FORM VIEW
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -222,7 +215,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {/* Equb Name & Address */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <label className="block text-xs font-bold text-slate-300 mb-1">
@@ -253,7 +245,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Amount & Frequency */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1">
@@ -290,16 +281,15 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* 🕒 Dynamic Schedule Range Inputs (Changes based on Frequency: Time or Day/Date) */}
+          {/* 🕒 Dynamic Schedule Range Inputs */}
           <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-4">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               {frequency === 'monthly' ? <Calendar className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
               {lang === 'am' 
-                ? (frequency === 'monthly' ? 'የወር የክፍያ እና የዕጣ ማውጫ ቀናት ገደብ (ከ ... እስከ ...)' : frequency === 'weekly' ? 'የሳምንት ቀናት የክፍያ እና የዕጣ ማውጫ ገደብ' : 'የክፍያ እና የዕጣ ማውጫ ሰዓት ገደቦች (ከ ... እስከ ...)')
+                ? (frequency === 'monthly' ? 'የወር የክፍያ እና የዕጣ ማውጫ ቀናት እና ሰዓቶች ገደብ' : frequency === 'weekly' ? 'የሳምንት ቀናት የክፍያ እና የዕጣ ማውጫ ገደብ' : 'የክፍያ እና የዕጣ ማውጫ ሰዓት ገደቦች (ከ ... እስከ ...)')
                 : 'Payment & Draw Schedule Ranges'}
             </label>
 
-            {/* 1. Deposit Range */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-bold text-slate-300 block">
                 {lang === 'am' 
@@ -308,53 +298,47 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
               </span>
               <div className="grid grid-cols-2 gap-3">
                 <input
-                  type={frequency === 'daily' ? 'time' : 'text'}
+                  type="text"
                   required
                   value={depositStart}
                   onChange={(e) => setDepositStart(e.target.value)}
-                  placeholder={frequency === 'monthly' ? 'ለምሳሌ፡ ቀን 1' : frequency === 'weekly' ? 'ሰኞ' : '08:00'}
                   className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
                 <input
-                  type={frequency === 'daily' ? 'time' : 'text'}
+                  type="text"
                   required
                   value={depositEnd}
                   onChange={(e) => setDepositEnd(e.target.value)}
-                  placeholder={frequency === 'monthly' ? 'ለምሳሌ፡ ቀን 5' : frequency === 'weekly' ? 'እሁድ' : '18:00'}
                   className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
               </div>
             </div>
 
-            {/* 2. Draw Range */}
             <div className="space-y-1.5 pt-1">
               <span className="text-[11px] font-bold text-slate-300 block">
                 {lang === 'am' 
-                  ? (frequency === 'monthly' ? '2. የዕጣ ማውጫ ቀን (ለምሳሌ፡ በ 6ኛ ቀን):' : frequency === 'weekly' ? '2. የዕጣ ማውጫ ቀን/ሰዓት (ለምሳሌ፡ እሁድ ማታ):' : '2. የዕጣ ማውጫ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):')
+                  ? (frequency === 'monthly' ? '2. የዕጣ ማውጫ ቀን እና ሰዓት range (ለምሳሌ፡ ከቀን 6 06:00 AM እስከ 06:00 PM):' : frequency === 'weekly' ? '2. የዕጣ ማውጫ ቀን/ሰዓት (ለምሳሌ፡ እሁድ ማታ):' : '2. የዕጣ ማውጫ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):')
                   : '2. Lottery Draw Range:'}
               </span>
               <div className="grid grid-cols-2 gap-3">
                 <input
-                  type={frequency === 'daily' ? 'time' : 'text'}
+                  type="text"
                   required
                   value={drawStart}
                   onChange={(e) => setDrawStart(e.target.value)}
-                  placeholder={frequency === 'monthly' ? 'ቀን 6' : frequency === 'weekly' ? 'እሁድ' : '19:00'}
                   className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
                 <input
-                  type={frequency === 'daily' ? 'time' : 'text'}
+                  type="text"
                   required
                   value={drawEnd}
                   onChange={(e) => setDrawEnd(e.target.value)}
-                  placeholder={frequency === 'monthly' ? 'ቀን 6 ማታ' : frequency === 'weekly' ? 'እሁድ ማታ' : '20:00'}
                   className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
                 />
               </div>
             </div>
           </div>
 
-          {/* Service Fee Percentage Options */}
           <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-3">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <Percent className="w-4 h-4" />
@@ -403,7 +387,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Passwords */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
@@ -454,7 +437,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Recovery */}
           <div className="bg-slate-950/60 border border-amber-500/30 p-4 rounded-2xl space-y-3">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4" />
@@ -496,7 +478,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Summary Calculation Preview */}
           {numericAmount > 0 && (
             <div className="bg-slate-950/90 border border-amber-500/30 p-4 rounded-2xl space-y-1.5 text-xs">
               <p className="font-bold text-amber-400 flex items-center gap-1.5">
@@ -515,7 +496,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           )}
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl transition text-xs shadow-xl cursor-pointer flex items-center justify-center gap-2 mt-4"
