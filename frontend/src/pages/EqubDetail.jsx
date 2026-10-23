@@ -11,7 +11,8 @@ import {
   Clock, 
   AlertCircle,
   Edit3,
-  RefreshCw
+  RefreshCw,
+  Sliders
 } from 'lucide-react';
 
 export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate, lang = 'am' }) {
@@ -24,14 +25,15 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   const [editingSlotId, setEditingSlotId] = useState(null);
   const [editSlotName, setEditSlotName] = useState('');
   
-  // Member Edit & Share Transfer State
+  // Advanced Member & Contribution Edit State
   const [editingMemberSlotId, setEditingMemberSlotId] = useState(null);
   const [transferTargetPhone, setTransferTargetPhone] = useState('');
+  const [customContributionAmount, setCustomContributionAmount] = useState('');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Translations Dictionary
+  // Translations Dictionary for Dynamic Language Toggle
   const t = {
     am: {
       back: 'ወደ ዋናው ገጽ ተመለስ',
@@ -55,10 +57,11 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
       assign: 'አስገባ',
       searchAssign: 'አባል ፈልጎ አስገባ (Search & Assign)',
       close: 'ዝጋ',
-      editShare: 'ድርሻ/አባል አስተካክል',
-      transferShare: 'ድርሻ ማስተላለፍ / መሸጥ',
-      transferPlaceholder: 'የተቀባዩ ስልክ ቁጥር...',
-      confirmTransfer: 'አስተላልፍ'
+      editShare: 'አባል እና መዋጮ አስተካክል',
+      transferShare: 'አባል መቀየር / ድርሻ ማስተላለፍ',
+      customAmountLabel: 'የግለሰብ መዋጮ መጠን (ETB):',
+      transferPlaceholder: 'ተቀባይ አባል ይምረጡ...',
+      confirmUpdate: 'አዘምን'
     },
     en: {
       back: 'Back to Dashboard',
@@ -82,15 +85,15 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
       assign: 'Assign',
       searchAssign: 'Search & Assign Member',
       close: 'Close',
-      editShare: 'Edit Member / Share',
-      transferShare: 'Transfer / Sell Share',
-      transferPlaceholder: 'Recipient phone number...',
-      confirmTransfer: 'Transfer'
+      editShare: 'Edit Member & Contribution',
+      transferShare: 'Change Member / Transfer Share',
+      customAmountLabel: 'Custom Contribution Amount (ETB):',
+      transferPlaceholder: 'Select recipient member...',
+      confirmUpdate: 'Update'
     }
   };
 
   const tr = t[lang] || t['am'];
-
   const mainEqubAmount = equbData?.contributionAmount || equbData?.contribution_amount || equbData?.amount || 1000;
 
   useEffect(() => {
@@ -115,7 +118,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
           const targetPrice = current.contributionAmount || current.contribution_amount || 1000;
           const initialSlots = (current.slots || []).map(s => ({
             ...s,
-            amount: targetPrice
+            amount: s.amount || targetPrice
           }));
           setSlots(initialSlots);
         }
@@ -216,7 +219,8 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
         return { 
           ...slot, 
           assignedMember: member,
-          paidAmount: mainEqubAmount 
+          amount: slot.amount || mainEqubAmount,
+          paidAmount: slot.amount || mainEqubAmount 
         };
       }
       return slot;
@@ -229,17 +233,19 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     saveSlotsToStorage(updatedSlots);
   };
 
-  // Transfer or Sell Share to another member
-  const handleTransferShare = (slotId, targetPhone) => {
-    const targetMember = membersList.find(m => m.phone === targetPhone);
-    if (!targetMember) {
-      setErrorMsg(lang === 'am' ? 'ተቀባዩ አባል አልተገኘም!' : 'Recipient member not found!');
-      return;
-    }
+  // Update Member, Transfer Share, or Custom Contribution Amount
+  const handleUpdateSlotAssignment = (slotId) => {
+    const targetMember = membersList.find(m => m.phone === transferTargetPhone);
+    const newAmount = customContributionAmount ? parseFloat(customContributionAmount) : null;
 
     const updatedSlots = slots.map(slot => {
       if (slot.id === slotId) {
-        return { ...slot, assignedMember: targetMember };
+        return { 
+          ...slot, 
+          assignedMember: targetMember ? targetMember : slot.assignedMember,
+          amount: newAmount !== null && !isNaN(newAmount) ? newAmount : slot.amount,
+          paidAmount: newAmount !== null && !isNaN(newAmount) ? newAmount : slot.paidAmount
+        };
       }
       return slot;
     });
@@ -247,6 +253,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     setSlots(updatedSlots);
     setEditingMemberSlotId(null);
     setTransferTargetPhone('');
+    setCustomContributionAmount('');
     setErrorMsg('');
     saveSlotsToStorage(updatedSlots);
   };
@@ -254,7 +261,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   const handleRemoveMember = (slotId) => {
     const updatedSlots = slots.map(slot => {
       if (slot.id === slotId) {
-        return { ...slot, assignedMember: null, paidAmount: 0 };
+        return { ...slot, assignedMember: null, paidAmount: 0, amount: mainEqubAmount };
       }
       return slot;
     });
@@ -417,35 +424,65 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                                 {tr.assignedMember}: <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
                                 {role === 'admin' && (
                                   <button 
-                                    onClick={() => setEditingMemberSlotId(editingMemberSlotId === slot.id ? null : slot.id)}
-                                    className="ml-2 text-[10px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30"
+                                    onClick={() => {
+                                      setEditingMemberSlotId(editingMemberSlotId === slot.id ? null : slot.id);
+                                      setCustomContributionAmount(slot.amount);
+                                      setTransferTargetPhone(slot.assignedMember?.phone || '');
+                                    }}
+                                    className="ml-2 text-[10px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-lg border border-amber-500/30 flex items-center gap-1 cursor-pointer"
                                   >
-                                    <RefreshCw className="w-3 h-3 inline mr-1" /> {tr.editShare}
+                                    <RefreshCw className="w-3 h-3" /> {tr.editShare}
                                   </button>
                                 )}
                               </div>
 
-                              {/* Share Transfer / Sell Option */}
+                              {/* Dropdown / Edit Panel for Member Transfer & Custom Contribution */}
                               {editingMemberSlotId === slot.id && (
-                                <div className="mt-2 p-2.5 bg-slate-900 border border-amber-500/30 rounded-xl space-y-2">
-                                  <p className="text-[10px] text-amber-400 font-bold">{tr.transferShare}:</p>
-                                  <div className="flex gap-2">
-                                    <select
-                                      value={transferTargetPhone}
-                                      onChange={(e) => setTransferTargetPhone(e.target.value)}
-                                      className="bg-slate-950 border border-slate-800 text-xs text-white rounded px-2 py-1 w-full"
-                                    >
-                                      <option value="">{tr.transferPlaceholder}</option>
-                                      {membersList.map(m => (
-                                        <option key={m.id || m.phone} value={m.phone}>{m.name} ({m.phone})</option>
-                                      ))}
-                                    </select>
-                                    <button
-                                      onClick={() => handleTransferShare(slot.id, transferTargetPhone)}
-                                      className="bg-amber-500 text-slate-950 px-3 py-1 rounded text-[10px] font-bold shrink-0"
-                                    >
-                                      {tr.confirmTransfer}
-                                    </button>
+                                <div className="mt-3 p-3 bg-slate-900 border border-amber-500/40 rounded-xl space-y-3 shadow-inner">
+                                  <p className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
+                                    <Sliders className="w-3.5 h-3.5" /> {tr.transferShare}:
+                                  </p>
+                                  
+                                  <div className="space-y-2">
+                                    <div>
+                                      <label className="text-[10px] text-slate-400 block mb-1">አባል መቀየሪያ (Dropdown):</label>
+                                      <select
+                                        value={transferTargetPhone}
+                                        onChange={(e) => setTransferTargetPhone(e.target.value)}
+                                        className="bg-slate-950 border border-amber-500/30 text-xs text-amber-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:border-amber-400"
+                                      >
+                                        <option value="">{tr.transferPlaceholder}</option>
+                                        {membersList.map(m => (
+                                          <option key={m.id || m.phone} value={m.phone}>{m.name} ({m.phone})</option>
+                                        ))}
+                                      </select>
+                                    </div>
+
+                                    <div>
+                                      <label className="text-[10px] text-slate-400 block mb-1">{tr.customAmountLabel}</label>
+                                      <input
+                                        type="number"
+                                        value={customContributionAmount}
+                                        onChange={(e) => setCustomContributionAmount(e.target.value)}
+                                        placeholder="1000"
+                                        className="bg-slate-950 border border-amber-500/30 text-xs text-amber-400 font-bold rounded-lg px-3 py-2 w-full focus:outline-none focus:border-amber-400"
+                                      />
+                                    </div>
+
+                                    <div className="flex gap-2 pt-1">
+                                      <button
+                                        onClick={() => handleUpdateSlotAssignment(slot.id)}
+                                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-1.5 rounded-lg text-[11px] font-black cursor-pointer shadow-md"
+                                      >
+                                        {tr.confirmUpdate}
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingMemberSlotId(null)}
+                                        className="bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-[11px] cursor-pointer"
+                                      >
+                                        {tr.cancel}
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               )}
