@@ -31,7 +31,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   const [selectedMemberPhone, setSelectedMemberPhone] = useState('');
   const [customContributionAmount, setCustomContributionAmount] = useState('');
 
-  const [searchTerm, setErrorSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   // Translations Dictionary for Dynamic Language Toggle
@@ -584,7 +584,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                               <input
                                 type="text"
                                 value={searchTerm}
-                                onChange={(e) => setErrorSearch(e.target.value)}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder={lang === 'am' ? "የአባል ስም ወይም ስልክ ቁጥር ጻፍ..." : "Search member by name or phone..."}
                                 className="w-full bg-slate-950 border border-amber-500/30 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
                                 autoFocus
@@ -616,7 +616,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                             </div>
 
                             <button
-                              onClick={() => { setActiveSlotId(null); setErrorSearch(''); }}
+                              onClick={() => { setActiveSlotId(null); setSearchTerm(''); }}
                               className="text-[10px] text-slate-400 hover:text-white underline pt-1 block text-right w-full cursor-pointer"
                             >
                               {tr.close}
