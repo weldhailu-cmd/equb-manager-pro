@@ -7,9 +7,9 @@ import {
 export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [hubView, setHubView] = useState('select');
 
-  const [equbName, setEqubName] = useState(lang === 'am' ? 'የሙከራ 500 ብር እቁብ' : 'Test 500 ETB Equb');
+  const [equbName, setEqubName] = useState(lang === 'am' ? 'የዮጵያ 1000 ብር እቁብ' : 'Yop 1000 ETB Equb');
   const [cityAddress, setCityAddress] = useState('ሞላሌ');
-  const [amount, setAmount] = useState('500');
+  const [amount, setAmount] = useState('1000');
   
   const [frequency, setFrequency] = useState('weekly');
 
@@ -20,7 +20,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [drawTimeStart, setDrawTimeStart] = useState('05:00'); 
   const [drawTimeEnd, setDrawTimeEnd] = useState('06:00');     
 
-  // Passwords & Recovery (Added Confirm Admin Password)
+  // Passwords & Recovery
   const [adminPassword, setAdminPassword] = useState('');
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
   const [memberPassword, setMemberPassword] = useState('');
@@ -29,8 +29,8 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [showConfirmAdminPass, setShowConfirmAdminPass] = useState(false);
   const [showMemberPass, setShowMemberPass] = useState(false);
   
-  // Improved memorable security questions
-  const [securityQuestion, setSecurityQuestion] = useState(lang === 'am' ? 'በጣም የሚወዱት ዕድለኛ ቁጥር ስንት ነው?' : 'What is your favorite lucky number?');
+  // Ethiopian Context Memorable Security Questions
+  const [securityQuestion, setSecurityQuestion] = useState(lang === 'am' ? 'የተወለዱበት ዘመን ወይም ዓመተ ምህረት ስንት ነው? (ለምሳሌ 1990)' : 'Birth year?');
   const [securityAnswer, setSecurityAnswer] = useState('');
   const [showSecurityAnswer, setShowSecurityAnswer] = useState(false);
 
@@ -90,14 +90,13 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate passwords match
     if (adminPassword !== confirmAdminPassword) {
-      alert(lang === 'am' ? 'የአስተዳዳሪ የይለፍ ቃሎች እርስ በእርስ አልተመሳሰሉም! እባክዎ እንደገና ይፈትሹ።' : 'Admin passwords do not match!');
+      alert(lang === 'am' ? 'የአስተዳዳሪ የይለፍ ቃሎች እርስ በእርስ አልተመሳሰሉም!' : 'Admin passwords do not match!');
       return;
     }
 
     if (!securityAnswer.trim()) {
-      alert(lang === 'am' ? 'እባክዎ አድሚን ፓስወርድ ሲረሳ የሚሆን የሚስጥር መልስ ያስገቡ!' : 'Please provide a security answer.');
+      alert(lang === 'am' ? 'እባክዎ ፓስወርድ ማገገሚያ ሚስጥር መልስ ያስገቡ!' : 'Please provide a security answer.');
       return;
     }
 
@@ -119,6 +118,8 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       securityQuestion,
       securityAnswer: securityAnswer.trim().toLowerCase(),
       address: cityAddress,
+      isChapaPaid: false, // Chapa Payment Gate status
+      isLocked: false,     // Auto lock if fee unpaid
       createdAt: new Date().toISOString()
     };
 
@@ -144,7 +145,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       console.log("Backend API sync warning:", err);
     }
 
-    alert(lang === 'am' ? 'እቁቡ በተሳካ ሁኔታ ተፈጠረ!' : 'Equb created successfully!');
+    alert(lang === 'am' ? 'እቁቡ በተሳካ ሁኔታ ተፈጠረ! (ለክፍያ ወደ Chapa ሊንክ በመተላለፍ ላይ...)' : 'Equb created successfully!');
     if (onNavigate) onNavigate('equb-detail');
   };
 
@@ -233,7 +234,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
         <div className="border-b border-slate-800 pb-4">
           <div className="flex items-center gap-2 text-amber-400 text-xs font-bold mb-1">
             <ShieldCheck className="w-4 h-4" />
-            <span>{lang === 'am' ? 'የእቁብ ማቋቋሚያ ቅጽ' : 'Equb Setup Form'}</span>
+            <span>{lang === 'am' ? 'የእቁብ ማቋቋሚያ ቅጽ (እስከ 6,500 ብር እና ከዚያ በላይ)' : 'Equb Setup Form'}</span>
           </div>
           <h2 className="text-xl md:text-2xl font-black text-white">
             {lang === 'am' ? 'ዮጵ ዲጂታል እቁብ አስተዳደር ስርዓት' : 'Yop Digital Equb Management System'}
@@ -275,7 +276,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1">
-                {lang === 'am' ? 'የዋና መጠን (በ 100 ወይም 500 ብር እጥፍ) *' : 'Contribution Amount *'}
+                {lang === 'am' ? 'የዋና መጠን (1000, 2000, 6500 ብር ወዘተ) *' : 'Contribution Amount *'}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -286,8 +287,9 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                   className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-4 py-3 text-xs text-amber-400 font-black focus:outline-none focus:border-amber-400 transition"
                 />
                 <div className="flex gap-1">
-                  <button type="button" onClick={() => setAmount('100')} className="bg-slate-900 hover:bg-slate-800 text-xs px-2.5 py-3 rounded-xl text-amber-400 font-bold border border-amber-500/30 cursor-pointer">100</button>
-                  <button type="button" onClick={() => setAmount('500')} className="bg-slate-900 hover:bg-slate-800 text-xs px-2.5 py-3 rounded-xl text-amber-400 font-bold border border-amber-500/30 cursor-pointer">500</button>
+                  <button type="button" onClick={() => setAmount('1000')} className="bg-slate-900 hover:bg-slate-800 text-[10px] px-2 py-3 rounded-xl text-amber-400 font-bold border border-amber-500/30 cursor-pointer">1000</button>
+                  <button type="button" onClick={() => setAmount('2000')} className="bg-slate-900 hover:bg-slate-800 text-[10px] px-2 py-3 rounded-xl text-amber-400 font-bold border border-amber-500/30 cursor-pointer">2000</button>
+                  <button type="button" onClick={() => setAmount('6500')} className="bg-slate-900 hover:bg-slate-800 text-[10px] px-2 py-3 rounded-xl text-amber-400 font-bold border border-amber-500/30 cursor-pointer">6500</button>
                 </div>
               </div>
             </div>
@@ -522,7 +524,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
               >
                 <div>
                   <p className="text-xs font-bold text-amber-300">መሠረታዊ (Basic)</p>
-                  <p className="text-sm font-black text-white mt-0.5">0.6% (60 ብር / 10k)</p>
+                  <p className="text-sm font-black text-white mt-0.5">0.6%</p>
                 </div>
                 {selectedFeeRate === 0.006 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
               </div>
@@ -535,7 +537,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
               >
                 <div>
                   <p className="text-xs font-bold text-amber-300">ስታንዳርድ (Standard)</p>
-                  <p className="text-sm font-black text-white mt-0.5">1.2% (120 ብር / 10k)</p>
+                  <p className="text-sm font-black text-white mt-0.5">1.2%</p>
                 </div>
                 {selectedFeeRate === 0.012 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
               </div>
@@ -548,14 +550,14 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
               >
                 <div>
                   <p className="text-xs font-bold text-amber-300">አድቫንስድ (Advanced)</p>
-                  <p className="text-sm font-black text-white mt-0.5">2.4% (240 ብር / 10k)</p>
+                  <p className="text-sm font-black text-white mt-0.5">2.4%</p>
                 </div>
                 {selectedFeeRate === 0.024 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
               </div>
             </div>
           </div>
 
-          {/* Passwords Section with Confirm Admin Password */}
+          {/* Passwords Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
@@ -630,7 +632,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Improved Memorable Security Questions */}
+          {/* Ethiopian Memorable Security Questions */}
           <div className="bg-slate-950/60 border border-amber-500/30 p-4 rounded-2xl space-y-3">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4" />
@@ -644,10 +646,10 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                   onChange={(e) => setSecurityQuestion(e.target.value)}
                   className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-400"
                 >
+                  <option value="የተወለዱበት ዘመን ወይም ዓመተ ምህረት ስንት ነው?">{lang === 'am' ? 'የተወለዱበት ዘመን ወይም ዓመተ ምህረት ስንት ነው? (ለምሳሌ 1990)' : 'Birth year?'}</option>
+                  <option value="የመጀመሪያ የመኪናዎ ወይም የታርጋ ቁጥር ስንት ነው?">{lang === 'am' ? 'የመጀመሪያ የመኪናዎ ወይም የታርጋ ቁጥር ስንት ነው?' : 'First plate number?'}</option>
+                  <option value="የእናትዎ የትውልድ ቦታ ስም ማን ነው?">{lang === 'am' ? 'የእናትዎ የትውልድ ቦታ ስም ማን ነው?' : 'Mother birthplace?'}</option>
                   <option value="በጣም የሚወዱት ዕድለኛ ቁጥር ስንት ነው?">{lang === 'am' ? 'በጣም የሚወዱት ዕድለኛ ቁጥር ስንት ነው?' : 'Favorite lucky number?'}</option>
-                  <option value="የተወለዱበት ወር (Month) ማነው?">{lang === 'am' ? 'የተወለዱበት ወር (Month) ማነው?' : 'Birth month?'}</option>
-                  <option value="የመጀመሪያ የቤት እንስሳ ስም ማን ነበር?">{lang === 'am' ? 'የመጀመሪያ የቤት እንስሳ ስም ማን ነበር?' : 'First pet name?'}</option>
-                  <option value="የምትወዱት የስፖርት ቡድን ስም ማን ነው?">{lang === 'am' ? 'የምትወዱት የስፖርት ቡድን ስም ማን ነው?' : 'Favorite sports team?'}</option>
                 </select>
               </div>
 
@@ -658,7 +660,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                     required
                     value={securityAnswer}
                     onChange={(e) => setSecurityAnswer(e.target.value)}
-                    placeholder={lang === 'am' ? 'ሚስጥር መልስ ያስገቡ...' : 'Enter security answer...'}
+                    placeholder={lang === 'am' ? 'ሚስጥር መልስ ያስገቡ (ለምሳሌ 1990)...' : 'Enter security answer...'}
                     className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3 py-2.5 pr-10 text-xs text-slate-200 focus:outline-none focus:border-amber-400"
                   />
                   <button
@@ -696,7 +698,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl transition text-xs shadow-xl cursor-pointer flex items-center justify-center gap-2 mt-4"
           >
             <ArrowRight className="w-4 h-4" />
-            <span>{lang === 'am' ? 'የእቁብ ስርዓት ማቋቋም (Save Equb System)' : 'Initialize Equb Hub'}</span>
+            <span>{lang === 'am' ? 'የእቁብ ስርዓት ማቋቋም እና በ Chapa ክፍያ መፈጸም (Save & Pay via Chapa)' : 'Initialize Equb Hub'}</span>
           </button>
         </form>
 
