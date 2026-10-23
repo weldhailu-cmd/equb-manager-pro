@@ -29,7 +29,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [showConfirmAdminPass, setShowConfirmAdminPass] = useState(false);
   const [showMemberPass, setShowMemberPass] = useState(false);
   
-  // Ethiopian Context Memorable Security Questions
   const [securityQuestion, setSecurityQuestion] = useState(lang === 'am' ? 'የተወለዱበት ዘመን ወይም ዓመተ ምህረት ስንት ነው? (ለምሳሌ 1990)' : 'Birth year?');
   const [securityAnswer, setSecurityAnswer] = useState('');
   const [showSecurityAnswer, setShowSecurityAnswer] = useState(false);
@@ -42,7 +41,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const serviceFeeAmount = totalPool * selectedFeeRate;
   const netPoolForWinner = totalPool - serviceFeeAmount;
 
-  // 🇪🇹 Helper Function for Ethiopian Time Display
   const getEthiopianTimeDisplay = (timeStr) => {
     if (!timeStr || !timeStr.includes(':')) return '';
     const [h, m] = timeStr.split(':').map(Number);
@@ -110,6 +108,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       id: "equb_" + Date.now(),
       name: equbName,
       contributionAmount: numericAmount,
+      amount: `${numericAmount} ETB`,
       frequency,
       scheduleSummary,
       feePercent: selectedFeeRate * 100,
@@ -118,34 +117,30 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       securityQuestion,
       securityAnswer: securityAnswer.trim().toLowerCase(),
       address: cityAddress,
-      isChapaPaid: false, // Chapa Payment Gate status
-      isLocked: false,     // Auto lock if fee unpaid
+      slots: Array.from({ length: 20 }, (_, i) => ({ id: i + 1, member: null, status: 'available' })),
       createdAt: new Date().toISOString()
     };
 
-    const existing = JSON.parse(localStorage.getItem('yop_saved_equbs') || '[]');
-    const updated = [newEqubObj, ...existing];
+    // Save to all possible localStorage keys to prevent mismatch
+    const existingSaved = JSON.parse(localStorage.getItem('yop_saved_equbs') || '[]');
+    const existingAll = JSON.parse(localStorage.getItem('all_equbs') || '[]');
+    
+    const updated = [newEqubObj, ...existingSaved];
     localStorage.setItem('yop_saved_equbs', JSON.stringify(updated));
-    localStorage.setItem('all_equbs', JSON.stringify(updated));
+    localStorage.setItem('all_equbs', JSON.stringify([newEqubObj, ...existingAll]));
+    localStorage.setItem('current_equb', JSON.stringify(newEqubObj));
 
     try {
       await fetch("http://127.0.0.1:5000/api/equbs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: newEqubObj.id,
-          name: newEqubObj.name,
-          amount: `${numericAmount} ETB`,
-          frequency,
-          scheduleSummary,
-          address: cityAddress
-        })
+        body: JSON.stringify(newEqubObj)
       });
     } catch (err) {
       console.log("Backend API sync warning:", err);
     }
 
-    alert(lang === 'am' ? 'እቁቡ በተሳካ ሁኔታ ተፈጠረ! (ለክፍያ ወደ Chapa ሊንክ በመተላለፍ ላይ...)' : 'Equb created successfully!');
+    alert(lang === 'am' ? 'እቁቡ በተሳካ ሁኔታ ተፈጠረ!' : 'Equb created successfully!');
     if (onNavigate) onNavigate('equb-detail');
   };
 
@@ -234,7 +229,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
         <div className="border-b border-slate-800 pb-4">
           <div className="flex items-center gap-2 text-amber-400 text-xs font-bold mb-1">
             <ShieldCheck className="w-4 h-4" />
-            <span>{lang === 'am' ? 'የእቁብ ማቋቋሚያ ቅጽ (እስከ 6,500 ብር እና ከዚያ በላይ)' : 'Equb Setup Form'}</span>
+            <span>{lang === 'am' ? 'የእቁብ ማቋቋሚያ ቅጽ' : 'Equb Setup Form'}</span>
           </div>
           <h2 className="text-xl md:text-2xl font-black text-white">
             {lang === 'am' ? 'ዮጵ ዲጂታል እቁብ አስተዳደር ስርዓት' : 'Yop Digital Equb Management System'}
@@ -310,7 +305,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* 🕒 Smart Schedule Inputs */}
           <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-4">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               {frequency === 'monthly' ? <Calendar className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
@@ -319,7 +313,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                 : 'Payment & Draw Schedule'}
             </label>
 
-            {/* 1. Deposit Range */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-bold text-slate-300 block">
                 {lang === 'am' 
@@ -411,7 +404,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
               )}
             </div>
 
-            {/* 2. Draw Day & Time Range */}
             <div className="space-y-1.5 pt-1">
               <span className="text-[11px] font-bold text-slate-300 block">
                 {lang === 'am' 
@@ -508,7 +500,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Service Fee Percentage Options */}
           <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-3">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <Percent className="w-4 h-4" />
@@ -557,7 +548,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Passwords Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
@@ -632,7 +622,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Ethiopian Memorable Security Questions */}
           <div className="bg-slate-950/60 border border-amber-500/30 p-4 rounded-2xl space-y-3">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4" />
