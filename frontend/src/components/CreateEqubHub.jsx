@@ -7,17 +7,17 @@ import {
 export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [hubView, setHubView] = useState('select');
 
-  const [equbName, setEqubName] = useState(lang === 'am' ? 'የወርሃዊ 200 ብር እቁብ' : 'Monthly 200 ETB Equb');
+  const [equbName, setEqubName] = useState(lang === 'am' ? 'የዕለታዊ 200 ብር እቁብ' : 'Daily 200 ETB Equb');
   const [cityAddress, setCityAddress] = useState('ሞላሌ');
   const [amount, setAmount] = useState('200');
   
-  const [frequency, setFrequency] = useState('monthly');
+  const [frequency, setFrequency] = useState('daily');
 
-  // Deposit & Draw Range States
-  const [depositStart, setDepositStart] = useState('ቀን 1');
-  const [depositEnd, setDepositEnd] = useState('ቀን 5');
-  const [drawStart, setDrawStart] = useState('ቀን 6 (06:00 AM)');
-  const [drawEnd, setDrawEnd] = useState('ቀን 6 (06:00 PM)');
+  // Schedule States
+  const [depositStart, setDepositStart] = useState('08:00');
+  const [depositEnd, setDepositEnd] = useState('18:00');
+  const [drawStart, setDrawStart] = useState('19:00');
+  const [drawEnd, setDrawEnd] = useState('20:00');
 
   // Passwords & Recovery
   const [adminPassword, setAdminPassword] = useState('');
@@ -37,24 +37,35 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const serviceFeeAmount = (totalPool * selectedFeePercent) / 100;
   const netPoolForWinner = totalPool - serviceFeeAmount;
 
+  // 🇪🇹 Helper Function for Ethiopian Time Display
+  const getEthiopianTimeDisplay = (timeStr) => {
+    if (!timeStr || !timeStr.includes(':')) return '';
+    const [h, m] = timeStr.split(':').map(Number);
+    let ethHour = (h + 6) % 12;
+    if (ethHour === 0) ethHour = 12;
+    const isNight = h >= 6 && h < 18; 
+    const period = isNight ? (lang === 'am' ? 'ቀን' : 'Day') : (lang === 'am' ? 'ማታ' : 'Night');
+    return `${ethHour}:${m < 10 ? '0' + m : m} (${period})`;
+  };
+
   const handleFrequencyChange = (e) => {
     const val = e.target.value;
     setFrequency(val);
     if (val === 'daily') {
-      setDepositStart('08:00 AM');
-      setDepositEnd('06:00 PM');
-      setDrawStart('07:00 PM');
-      setDrawEnd('08:00 PM');
+      setDepositStart('08:00');
+      setDepositEnd('18:00');
+      setDrawStart('19:00');
+      setDrawEnd('20:00');
     } else if (val === 'weekly') {
-      setDepositStart('ሰኞ');
-      setDepositEnd('እሁድ');
-      setDrawStart('እሁድ 06:00 AM');
-      setDrawEnd('እሁድ 06:00 PM');
+      setDepositStart('ሰኞ (Monday)');
+      setDepositEnd('እሁድ (Sunday)');
+      setDrawStart('እሁድ (Sunday)');
+      setDrawEnd('እሁድ ማታ');
     } else if (val === 'monthly') {
       setDepositStart('ቀን 1');
       setDepositEnd('ቀን 5');
-      setDrawStart('ቀን 6 (06:00 AM)');
-      setDrawEnd('ቀን 6 (06:00 PM)');
+      setDrawStart('ቀን 6');
+      setDrawEnd('ቀን 6 ማታ');
     }
   };
 
@@ -281,61 +292,191 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* 🕒 Dynamic Schedule Range Inputs */}
+          {/* 🕒 Smart Schedule Inputs with Dropdown Select for Weekly/Monthly & Time for Daily */}
           <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-4">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               {frequency === 'monthly' ? <Calendar className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
               {lang === 'am' 
-                ? (frequency === 'monthly' ? 'የወር የክፍያ እና የዕጣ ማውጫ ቀናት እና ሰዓቶች ገደብ' : frequency === 'weekly' ? 'የሳምንት ቀናት የክፍያ እና የዕጣ ማውጫ ገደብ' : 'የክፍያ እና የዕጣ ማውጫ ሰዓት ገደቦች (ከ ... እስከ ...)')
+                ? (frequency === 'monthly' ? 'የወር የክፍያ እና የዕጣ ማውጫ ቀናት ገደብ' : frequency === 'weekly' ? 'የሳምንት ቀናት የክፍያ እና የዕጣ ማውጫ ገደብ' : 'የክፍያ እና የዕጣ ማውጫ ሰዓት ገደቦች (ፈረንሳይኛ / 🇪🇹 የኢትዮጵያ ሰዓት)')
                 : 'Payment & Draw Schedule Ranges'}
             </label>
 
+            {/* 1. Deposit Range */}
             <div className="space-y-1.5">
               <span className="text-[11px] font-bold text-slate-300 block">
                 {lang === 'am' 
-                  ? (frequency === 'monthly' ? '1. ብር ገቢ ማድረጊያ የቀናት ገደብ (ለምሳሌ፡ ከ ቀን 1 እስከ ቀን 5):' : frequency === 'weekly' ? '1. ብር ገቢ ማድረጊያ የቀናት ገደብ (ከሰኞ እስከ እሁድ):' : '1. የክፍያ ገቢ ማድረጊያ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):')
+                  ? (frequency === 'monthly' ? '1. ብር ገቢ ማድረጊያ የቀናት ገደብ (ከስንተኛው ቀን እስከ ስንተኛው ቀን):' : frequency === 'weekly' ? '1. ብር ገቢ ማድረጊያ የቀናት ገደብ (ከሰኞ እስከ እሁድ):' : '1. የክፍያ መነሻ እና ማብቂያ ሰዓት (የፈረንጆቹ / 🇪🇹 የኢትዮጵያ):')
                   : '1. Deposit Range:'}
               </span>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  required
-                  value={depositStart}
-                  onChange={(e) => setDepositStart(e.target.value)}
-                  className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
-                />
-                <input
-                  type="text"
-                  required
-                  value={depositEnd}
-                  onChange={(e) => setDepositEnd(e.target.value)}
-                  className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
-                />
-              </div>
+
+              {frequency === 'weekly' ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    value={depositStart}
+                    onChange={(e) => setDepositStart(e.target.value)}
+                    className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="ሰኞ (Monday)">ሰኞ (Monday)</option>
+                    <option value="ማክሰኞ (Tuesday)">ማክሰኞ (Tuesday)</option>
+                    <option value="እሮብ (Wednesday)">እሮብ (Wednesday)</option>
+                    <option value="ሐሙስ (Thursday)">ሐሙስ (Thursday)</option>
+                    <option value="አርብ (Friday)">አርብ (Friday)</option>
+                    <option value="ቅዳሜ (Saturday)">ቅዳሜ (Saturday)</option>
+                    <option value="እሁድ (Sunday)">እሁድ (Sunday)</option>
+                  </select>
+                  <select
+                    value={depositEnd}
+                    onChange={(e) => setDepositEnd(e.target.value)}
+                    className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="ሰኞ (Monday)">ሰኞ (Monday)</option>
+                    <option value="ማክሰኞ (Tuesday)">ማክሰኞ (Tuesday)</option>
+                    <option value="እሮብ (Wednesday)">እሮብ (Wednesday)</option>
+                    <option value="ሐሙስ (Thursday)">ሐሙስ (Thursday)</option>
+                    <option value="አርብ (Friday)">አርብ (Friday)</option>
+                    <option value="ቅዳሜ (Saturday)">ቅዳሜ (Saturday)</option>
+                    <option value="እሁድ (Sunday)">እሁድ (Sunday)</option>
+                  </select>
+                </div>
+              ) : frequency === 'monthly' ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    value={depositStart}
+                    onChange={(e) => setDepositStart(e.target.value)}
+                    className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 focus:outline-none focus:border-amber-400"
+                  >
+                    {[...Array(30)].map((_, i) => (
+                      <option key={i+1} value={`ቀን ${i+1}`}>ቀን {i+1}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={depositEnd}
+                    onChange={(e) => setDepositEnd(e.target.value)}
+                    className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 focus:outline-none focus:border-amber-400"
+                  >
+                    {[...Array(30)].map((_, i) => (
+                      <option key={i+1} value={`ቀን ${i+1}`}>ቀን {i+1}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      type="time"
+                      required
+                      value={depositStart}
+                      onChange={(e) => setDepositStart(e.target.value)}
+                      className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                    />
+                    {depositStart && (
+                      <span className="text-[10px] text-amber-400/80 block mt-1 font-mono">
+                        🇪🇹 ኢትዮጵያ: {getEthiopianTimeDisplay(depositStart)}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="time"
+                      required
+                      value={depositEnd}
+                      onChange={(e) => setDepositEnd(e.target.value)}
+                      className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                    />
+                    {depositEnd && (
+                      <span className="text-[10px] text-amber-400/80 block mt-1 font-mono">
+                        🇪🇹 ኢትዮጵያ: {getEthiopianTimeDisplay(depositEnd)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* 2. Draw Range */}
             <div className="space-y-1.5 pt-1">
               <span className="text-[11px] font-bold text-slate-300 block">
                 {lang === 'am' 
-                  ? (frequency === 'monthly' ? '2. የዕጣ ማውጫ ቀን እና ሰዓት range (ለምሳሌ፡ ከቀን 6 06:00 AM እስከ 06:00 PM):' : frequency === 'weekly' ? '2. የዕጣ ማውጫ ቀን/ሰዓት (ለምሳሌ፡ እሁድ ማታ):' : '2. የዕጣ ማውጫ ሰዓት range (ከስንት ሰዓት እስከ ስንት ሰዓት):')
+                  ? (frequency === 'monthly' ? '2. የዕጣ ማውጫ ቀን እና ሰዓት (ለምሳሌ፡ በ 6ኛው ቀን):' : frequency === 'weekly' ? '2. የዕጣ ማውጫ ቀን (ለምሳሌ፡ እሁድ):' : '2. የዕጣ ማውጫ ሰዓት range (የፈረንጆቹ / 🇪🇹 የኢትዮጵያ):')
                   : '2. Lottery Draw Range:'}
               </span>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  required
-                  value={drawStart}
-                  onChange={(e) => setDrawStart(e.target.value)}
-                  className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
-                />
-                <input
-                  type="text"
-                  required
-                  value={drawEnd}
-                  onChange={(e) => setDrawEnd(e.target.value)}
-                  className="bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
-                />
-              </div>
+
+              {frequency === 'weekly' ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    value={drawStart}
+                    onChange={(e) => setDrawStart(e.target.value)}
+                    className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="ሰኞ (Monday)">ሰኞ (Monday)</option>
+                    <option value="ማክሰኞ (Tuesday)">ማክሰኞ (Tuesday)</option>
+                    <option value="እሮብ (Wednesday)">እሮብ (Wednesday)</option>
+                    <option value="ሐሙስ (Thursday)">ሐሙስ (Thursday)</option>
+                    <option value="አርብ (Friday)">አርብ (Friday)</option>
+                    <option value="ቅዳሜ (Saturday)">ቅዳሜ (Saturday)</option>
+                    <option value="እሁድ (Sunday)">እሁድ (Sunday)</option>
+                  </select>
+                  <select
+                    value={drawEnd}
+                    onChange={(e) => setDrawEnd(e.target.value)}
+                    className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 focus:outline-none focus:border-amber-400"
+                  >
+                    <option value="ሰኞ ማታ">ሰኞ ማታ</option>
+                    <option value="እሁድ ማታ">እሁድ ማታ</option>
+                  </select>
+                </div>
+              ) : frequency === 'monthly' ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    value={drawStart}
+                    onChange={(e) => setDrawStart(e.target.value)}
+                    className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 focus:outline-none focus:border-amber-400"
+                  >
+                    {[...Array(30)].map((_, i) => (
+                      <option key={i+1} value={`ቀን ${i+1}`}>ቀን {i+1}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    required
+                    value={drawEnd}
+                    onChange={(e) => setDrawEnd(e.target.value)}
+                    placeholder="ለምሳሌ፡ 06:00 PM"
+                    className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      type="time"
+                      required
+                      value={drawStart}
+                      onChange={(e) => setDrawStart(e.target.value)}
+                      className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                    />
+                    {drawStart && (
+                      <span className="text-[10px] text-amber-400/80 block mt-1 font-mono">
+                        🇪🇹 ኢትዮጵያ: {getEthiopianTimeDisplay(drawStart)}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="time"
+                      required
+                      value={drawEnd}
+                      onChange={(e) => setDrawEnd(e.target.value)}
+                      className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                    />
+                    {drawEnd && (
+                      <span className="text-[10px] text-amber-400/80 block mt-1 font-mono">
+                        🇪🇹 ኢትዮጵያ: {getEthiopianTimeDisplay(drawEnd)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
