@@ -10,7 +10,8 @@ import {
   CheckCircle2, 
   Clock, 
   AlertCircle,
-  Edit3
+  Edit3,
+  RefreshCw
 } from 'lucide-react';
 
 export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate, lang = 'am' }) {
@@ -23,8 +24,72 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   const [editingSlotId, setEditingSlotId] = useState(null);
   const [editSlotName, setEditSlotName] = useState('');
   
+  // Member Edit & Share Transfer State
+  const [editingMemberSlotId, setEditingMemberSlotId] = useState(null);
+  const [transferTargetPhone, setTransferTargetPhone] = useState('');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Translations Dictionary
+  const t = {
+    am: {
+      back: 'ወደ ዋናው ገጽ ተመለስ',
+      amount: 'የዕቁብ መጠን',
+      createSlotTitle: 'አዲስ ስሎት መፍጠሪያ',
+      autoPriced: 'ዋጋው በራስ-ሰር',
+      slotPlaceholder: 'የስሎት ስም (ምሳሌ፦ ስሎት #1, ዙር #1)...',
+      addSlotBtn: 'ስሎት ፍጠር',
+      slotsListTitle: 'የስሎቶች እና የክፍያ ማረጋገጫ ዝርዝር',
+      slotsCount: 'ስሎቶች',
+      noSlots: 'እስካሁን የተፈጠረ ስሎት የለም።',
+      assignedMember: 'የተመደበ አባል',
+      unassigned: 'አባል አልተመደበለትም (ክፍት)',
+      readyForDraw: 'ለዕጣ ዝግጁ ነው',
+      pendingPayment: 'ክፍያ ያልተሟላ (Pending)',
+      unassignBtn: 'አንሳ',
+      save: 'መዝግብ',
+      cancel: 'ተው',
+      searchPlaceholder: 'የአባል ስም ወይም ስልክ ቁጥር ጻፍ...',
+      noMemberFound: 'ምንም የተገኘ አባል የለም።',
+      assign: 'አስገባ',
+      searchAssign: 'አባል ፈልጎ አስገባ (Search & Assign)',
+      close: 'ዝጋ',
+      editShare: 'ድርሻ/አባል አስተካክል',
+      transferShare: 'ድርሻ ማስተላለፍ / መሸጥ',
+      transferPlaceholder: 'የተቀባዩ ስልክ ቁጥር...',
+      confirmTransfer: 'አስተላልፍ'
+    },
+    en: {
+      back: 'Back to Dashboard',
+      amount: 'Equb Amount',
+      createSlotTitle: 'Create New Slot',
+      autoPriced: 'Auto-priced at',
+      slotPlaceholder: 'Slot identifier (e.g. Slot #1)...',
+      addSlotBtn: 'Add Slot',
+      slotsListTitle: 'Slots & Payment Status Summary',
+      slotsCount: 'Slots',
+      noSlots: 'No slots created yet.',
+      assignedMember: 'Assigned Member',
+      unassigned: 'Unassigned (Open)',
+      readyForDraw: 'Ready for Draw',
+      pendingPayment: 'Payment Incomplete',
+      unassignBtn: 'Unassign',
+      save: 'Save',
+      cancel: 'Cancel',
+      searchPlaceholder: 'Search member by name or phone...',
+      noMemberFound: 'No matching members found.',
+      assign: 'Assign',
+      searchAssign: 'Search & Assign Member',
+      close: 'Close',
+      editShare: 'Edit Member / Share',
+      transferShare: 'Transfer / Sell Share',
+      transferPlaceholder: 'Recipient phone number...',
+      confirmTransfer: 'Transfer'
+    }
+  };
+
+  const tr = t[lang] || t['am'];
 
   const mainEqubAmount = equbData?.contributionAmount || equbData?.contribution_amount || equbData?.amount || 1000;
 
@@ -146,21 +211,6 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   };
 
   const handleAssignMember = (slotId, member) => {
-    const currentAssignments = slots.filter(
-      slot => slot.assignedMember && (slot.assignedMember.phone === member.phone || slot.assignedMember.id === member.id)
-    ).length;
-
-    const allowedShares = member.shares || 1;
-
-    if (currentAssignments >= allowedShares) {
-      setErrorMsg(
-        lang === 'am'
-          ? `⚠️ ይቅርታ! ${member.name} ከዚህ በፊት በሌላ ስሎት ተመድቧል።`
-          : `⚠️ Restricted! ${member.name} is already assigned to a slot.`
-      );
-      return;
-    }
-
     const updatedSlots = slots.map(slot => {
       if (slot.id === slotId) {
         return { 
@@ -175,6 +225,28 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     setSlots(updatedSlots);
     setActiveSlotId(null);
     setSearchTerm('');
+    setErrorMsg('');
+    saveSlotsToStorage(updatedSlots);
+  };
+
+  // Transfer or Sell Share to another member
+  const handleTransferShare = (slotId, targetPhone) => {
+    const targetMember = membersList.find(m => m.phone === targetPhone);
+    if (!targetMember) {
+      setErrorMsg(lang === 'am' ? 'ተቀባዩ አባል አልተገኘም!' : 'Recipient member not found!');
+      return;
+    }
+
+    const updatedSlots = slots.map(slot => {
+      if (slot.id === slotId) {
+        return { ...slot, assignedMember: targetMember };
+      }
+      return slot;
+    });
+
+    setSlots(updatedSlots);
+    setEditingMemberSlotId(null);
+    setTransferTargetPhone('');
     setErrorMsg('');
     saveSlotsToStorage(updatedSlots);
   };
@@ -221,11 +293,11 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
           className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-md"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>{lang === 'am' ? 'ወደ ዋናው ገጽ ተመለስ' : 'Back to Dashboard'}</span>
+          <span>{tr.back}</span>
         </button>
         <span className="text-xs text-amber-400 bg-[#0d1322] px-3.5 py-2 rounded-xl border border-amber-500/30 font-bold flex items-center gap-2 shadow-md">
           <ShieldCheck className="w-4 h-4 text-amber-400" />
-          {equbData?.name || (lang === 'am' ? 'ዮጵ ዲጂታል እቁብ' : 'Yop Digital Equb')} | {lang === 'am' ? 'የዕቁብ መጠን' : 'Amount'}: <strong className="text-white">{mainEqubAmount} ETB</strong>
+          {equbData?.name || (lang === 'am' ? 'ዮጵ ዲጂታል እቁብ' : 'Yop Digital Equb')} | {tr.amount}: <strong className="text-white">{mainEqubAmount} ETB</strong>
         </span>
       </div>
 
@@ -244,10 +316,10 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h3 className="text-sm font-black text-amber-400 flex items-center gap-2">
                 <Plus className="w-4 h-4" /> 
-                {lang === 'am' ? 'አዲስ ስሎት መፍጠሪያ' : 'Create New Slot'}
+                {tr.createSlotTitle}
               </h3>
               <span className="text-[11px] text-amber-300/80 bg-slate-950 px-3 py-1 rounded-lg border border-amber-500/20 font-mono">
-                ⚡ {lang === 'am' ? `ዋጋው በራስ-ሰር ${mainEqubAmount} ETB ይሆናል` : `Auto-priced at ${mainEqubAmount} ETB`}
+                ⚡ {tr.autoPriced} {mainEqubAmount} ETB
               </span>
             </div>
 
@@ -256,7 +328,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                 type="text"
                 value={slotName}
                 onChange={(e) => setSlotName(e.target.value)}
-                placeholder={lang === 'am' ? "የስሎት ስም (ምሳሌ፦ ስሎት #1, ዙር #1)..." : "Slot identifier (e.g. Slot #1)..."}
+                placeholder={tr.slotPlaceholder}
                 className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-4 py-3 text-xs text-amber-300 placeholder-slate-500 focus:outline-none focus:border-amber-400"
                 required
               />
@@ -265,7 +337,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                 className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl transition cursor-pointer shrink-0 shadow-lg flex items-center justify-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
-                <span>{lang === 'am' ? 'ስሎት ፍጠር' : 'Add Slot'}</span>
+                <span>{tr.addSlotBtn}</span>
               </button>
             </form>
           </div>
@@ -276,16 +348,16 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
           <div className="flex justify-between items-center border-b border-slate-800 pb-3">
             <h3 className="text-sm font-black text-amber-400 flex items-center gap-2">
               <Users className="w-4 h-4" /> 
-              {lang === 'am' ? 'የስሎቶች እና የክፍያ ማረጋገጫ ዝርዝር' : 'Slots & Payment Status Summary'}
+              {tr.slotsListTitle}
             </h3>
             <span className="text-[10px] bg-slate-950 border border-amber-500/30 text-amber-300 px-3 py-1 rounded-lg font-bold">
-              {slots.length} {lang === 'am' ? 'ስሎቶች' : 'Slots'}
+              {slots.length} {tr.slotsCount}
             </span>
           </div>
 
           {slots.length === 0 ? (
             <div className="text-center py-10 text-slate-400 text-xs space-y-2">
-              <p>{lang === 'am' ? 'እስካሁን የተፈጠረ ስሎት የለም።' : 'No slots created yet.'}</p>
+              <p>{tr.noSlots}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -310,13 +382,13 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                               onClick={() => handleUpdateSlotName(slot.id)}
                               className="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-lg text-[10px] font-bold"
                             >
-                              {lang === 'am' ? 'መዝግብ' : 'Save'}
+                              {tr.save}
                             </button>
                             <button 
                               onClick={() => setEditingSlotId(null)}
                               className="text-slate-400 text-[10px]"
                             >
-                              {lang === 'am' ? 'ተው' : 'Cancel'}
+                              {tr.cancel}
                             </button>
                           </div>
                         ) : (
@@ -337,18 +409,53 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                           </h4>
                         )}
 
-                        <p className="text-[11px] text-slate-300 mt-1">
+                        <div className="text-[11px] text-slate-300 mt-1 space-y-1">
                           {slot.assignedMember ? (
-                            <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-                              <UserCheck className="w-3.5 h-3.5 text-amber-400" /> 
-                              {lang === 'am' ? 'የተመደበ አባል' : 'Assigned Member'}: <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
-                            </span>
+                            <div>
+                              <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                                <UserCheck className="w-3.5 h-3.5 text-amber-400" /> 
+                                {tr.assignedMember}: <strong className="text-white">{slot.assignedMember.name}</strong> ({slot.assignedMember.phone})
+                                {role === 'admin' && (
+                                  <button 
+                                    onClick={() => setEditingMemberSlotId(editingMemberSlotId === slot.id ? null : slot.id)}
+                                    className="ml-2 text-[10px] bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30"
+                                  >
+                                    <RefreshCw className="w-3 h-3 inline mr-1" /> {tr.editShare}
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Share Transfer / Sell Option */}
+                              {editingMemberSlotId === slot.id && (
+                                <div className="mt-2 p-2.5 bg-slate-900 border border-amber-500/30 rounded-xl space-y-2">
+                                  <p className="text-[10px] text-amber-400 font-bold">{tr.transferShare}:</p>
+                                  <div className="flex gap-2">
+                                    <select
+                                      value={transferTargetPhone}
+                                      onChange={(e) => setTransferTargetPhone(e.target.value)}
+                                      className="bg-slate-950 border border-slate-800 text-xs text-white rounded px-2 py-1 w-full"
+                                    >
+                                      <option value="">{tr.transferPlaceholder}</option>
+                                      {membersList.map(m => (
+                                        <option key={m.id || m.phone} value={m.phone}>{m.name} ({m.phone})</option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      onClick={() => handleTransferShare(slot.id, transferTargetPhone)}
+                                      className="bg-amber-500 text-slate-950 px-3 py-1 rounded text-[10px] font-bold shrink-0"
+                                    >
+                                      {tr.confirmTransfer}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-slate-500 italic">
-                              {lang === 'am' ? 'አባል አልተመደበለትም (ክፍት)' : 'Unassigned (Open)'}
+                              {tr.unassigned}
                             </span>
                           )}
-                        </p>
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -356,12 +463,12 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                           isPaidFull ? (
                             <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-600 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shadow-md">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 
-                              {lang === 'am' ? 'ለዕጣ ዝግጁ ነው' : 'Ready for Draw'}
+                              {tr.readyForDraw}
                             </span>
                           ) : (
                             <span className="text-[10px] bg-amber-950/90 text-amber-300 border border-amber-600 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shadow-md">
                               <Clock className="w-3.5 h-3.5 text-amber-400" /> 
-                              {lang === 'am' ? 'ክፍያ ያልተሟላ (Pending)' : 'Payment Incomplete'}
+                              {tr.pendingPayment}
                             </span>
                           )
                         )}
@@ -371,7 +478,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                             onClick={() => handleRemoveMember(slot.id)}
                             className="px-3 py-1.5 bg-red-950 text-red-300 border border-red-800 text-[10px] rounded-xl hover:bg-red-900 transition cursor-pointer font-bold"
                           >
-                            {lang === 'am' ? 'አንሳ' : 'Unassign'}
+                            {tr.unassignBtn}
                           </button>
                         )}
 
@@ -397,7 +504,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder={lang === 'am' ? "የአባል ስም ወይም ስልክ ቁጥር ጻፍ..." : "Search member by name or phone..."}
+                                placeholder={tr.searchPlaceholder}
                                 className="w-full bg-slate-950 border border-amber-500/30 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
                                 autoFocus
                               />
@@ -406,7 +513,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                             <div className="max-h-36 overflow-y-auto space-y-1">
                               {filteredMembers.length === 0 ? (
                                 <p className="text-[11px] text-slate-500 text-center py-2">
-                                  {lang === 'am' ? 'ምንም የተገኘ አባል የለም።' : 'No matching members found.'}
+                                  {tr.noMemberFound}
                                 </p>
                               ) : (
                                 filteredMembers.map((member) => (
@@ -420,7 +527,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                                       <span className="text-amber-400/80 ml-2 text-[10px]">({member.phone})</span>
                                     </div>
                                     <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded text-[10px] border border-amber-500/20">
-                                      + {lang === 'am' ? 'አስገባ' : 'Assign'}
+                                      + {tr.assign}
                                     </span>
                                   </div>
                                 ))
@@ -431,7 +538,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                               onClick={() => { setActiveSlotId(null); setSearchTerm(''); }}
                               className="text-[10px] text-slate-400 hover:text-white underline pt-1 block text-right w-full cursor-pointer"
                             >
-                              {lang === 'am' ? 'ዝጋ' : 'Close'}
+                              {tr.close}
                             </button>
                           </div>
                         ) : (
@@ -439,7 +546,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                             onClick={() => setActiveSlotId(slot.id)}
                             className="text-[11px] text-amber-400 font-bold hover:underline cursor-pointer flex items-center gap-1.5 bg-slate-900 px-3 py-2 rounded-xl border border-amber-500/30 hover:border-amber-400 transition shadow-sm"
                           >
-                            + {lang === 'am' ? 'አባል ፈልጎ አስገባ (Search & Assign)' : 'Search & Assign Member'}
+                            + {tr.searchAssign}
                           </button>
                         )}
                       </div>
