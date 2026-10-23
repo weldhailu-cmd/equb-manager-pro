@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, ArrowRight, 
-  ArrowLeft, Percent, Calculator, CheckSquare, Square, MapPin, KeyRound, Eye, EyeOff, HelpCircle 
+  ArrowLeft, Percent, Calculator, CheckSquare, Square, MapPin, KeyRound, Eye, EyeOff, HelpCircle, Clock 
 } from 'lucide-react';
 
 export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [equbName, setEqubName] = useState(lang === 'am' ? 'የዕለታዊ 200 ብር እቁብ' : 'Daily 200 ETB Equb');
   const [cityAddress, setCityAddress] = useState('ሞላሌ');
   const [amount, setAmount] = useState('200');
+  
+  // Deposit Time Window States (ከስንት ሰዓት እስከ ስንት ሰዓት)
+  const [depositStartTime, setDepositStartTime] = useState('08:00');
+  const [depositEndTime, setDepositEndTime] = useState('22:00');
   
   // Passwords, Eye Toggles & Security Recovery States
   const [adminPassword, setAdminPassword] = useState('');
@@ -49,6 +53,10 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       name: equbName,
       contributionAmount: numericAmount,
       frequency,
+      depositWindow: {
+        startTime: depositStartTime,
+        endTime: depositEndTime
+      },
       feePercent: selectedFeePercent,
       adminPassword,
       memberPassword,
@@ -74,6 +82,8 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
           name: newEqubObj.name,
           amount: `${numericAmount} ETB`,
           cycle: frequency,
+          depositStartTime,
+          depositEndTime,
           address: cityAddress
         })
       });
@@ -188,6 +198,47 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                 <option value="ሳምንታዊ (Weekly)">{lang === 'am' ? 'ሳምንታዊ (Weekly)' : 'Weekly'}</option>
                 <option value="ወርሃዊ (Monthly)">{lang === 'am' ? 'ወርሃዊ (Monthly)' : 'Monthly'}</option>
               </select>
+            </div>
+          </div>
+
+          {/* 🌟 NEW: Deposit Time Window Range (የክፍያ ሰዓት ገደብ ከስንት ሰዓት እስከ ስንት ሰዓት) */}
+          <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-3">
+            <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
+              <Clock className="w-4 h-4" />
+              {lang === 'am' ? 'የብር ገቢ ማድረጊያ ሰዓት ገደብ (Deposit Time Slot Window)' : 'Deposit Time Slot Window'}
+            </label>
+            <p className="text-[11px] text-slate-400">
+              {lang === 'am' 
+                ? 'አባላት በክፍያ ዑደቱ ውስጥ ብር ገቢ የሚያደርጉበትን የመነሻ እና የመጨረሻ ሰዓት ይወስኑ (በኋላ ላይ በምቾት ኤዲት ማድረግ ይቻላል)፦' 
+                : 'Set deposit allowed window (editable anytime by admin):'}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                  {lang === 'am' ? 'የክፍያ መነሻ ሰዓት (Start Time)' : 'Deposit Start Time'}
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={depositStartTime}
+                  onChange={(e) => setDepositStartTime(e.target.value)}
+                  className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                  {lang === 'am' ? 'የክፍያ ማብቂያ ሰዓት (End Time)' : 'Deposit Deadline Time'}
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={depositEndTime}
+                  onChange={(e) => setDepositEndTime(e.target.value)}
+                  className="w-full bg-slate-900 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-400"
+                />
+              </div>
             </div>
           </div>
 
@@ -353,6 +404,9 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                 <p>{lang === 'am' ? 'ግምታዊ ጠቅላላ መጠን (በ 20 አባላት):' : 'Estimated Total Pool:'} <b className="text-white">{totalPool.toLocaleString()} ብር</b></p>
                 <p>{lang === 'am' ? 'የሲስተም አገልግሎት ክፍያ (' + selectedFeePercent + '%):' : 'System Fee:'} <b className="text-amber-400">{serviceFeeAmount.toFixed(2)} ብር</b></p>
                 <p>{lang === 'am' ? 'ለዕጣ አሸናፊ የሚደርሰው ንጹህ ገንዘብ:' : 'Net Pool for Winner:'} <b className="text-emerald-400">{netPoolForWinner.toLocaleString()} ብር</b></p>
+                <p className="text-amber-300/80 pt-1 text-[11px]">
+                  ⏱ {lang === 'am' ? `የክፍያ ሰዓት ገደብ፡ ከ ${depositStartTime} እስከ ${depositEndTime}` : `Deposit Window: From ${depositStartTime} to ${depositEndTime}`}
+                </p>
               </div>
             </div>
           )}
@@ -366,10 +420,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             <span>{lang === 'am' ? 'የእቁብ ስርዓት ማቋቋም (Save Equb System)' : 'Initialize Equb Hub'}</span>
           </button>
         </form>
-
-        <div className="text-center pt-4 border-t border-slate-800 text-[11px] text-slate-500">
-          Yop (Yellow Gold / ቢጫ ወርቅ) © {new Date().getFullYear()} | All Rights Reserved.
-        </div>
 
       </div>
     </div>
