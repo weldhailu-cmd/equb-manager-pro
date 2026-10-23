@@ -3,13 +3,13 @@ import HomePage from './components/HomePage';
 import EqubDetail from './pages/EqubDetail';
 import CreateEqubHub from './components/CreateEqubHub';
 import Marketplace from './pages/Marketplace';
-import { Globe, ArrowLeft, BookOpen, ShieldCheck } from 'lucide-react';
+import { Globe, ArrowLeft, BookOpen } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext.jsx';
 
 function MainApp() {
-  const [currentView, setCurrentView] = useState('home'); // 'home', 'equb-detail', 'create', 'marketplace', 'how-it-works'
+  const [currentView, setCurrentView] = useState('home');
   const [routeParams, setRouteParams] = useState(null);
-  const { lang, setLang, t } = useLanguage();
+  const { lang, setLang } = useLanguage();
 
   const handleNavigate = (view, params = null) => {
     setRouteParams(params);
@@ -40,8 +40,16 @@ function MainApp() {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => handleNavigate('home')}
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-amber-500/20 group-hover:scale-105 transition transform">
-            Y
+          {/* Logo Image from public/logo.jpg */}
+          <div className="w-10 h-10 rounded-2xl overflow-hidden border border-amber-500/40 shadow-lg shadow-amber-500/20 group-hover:scale-105 transition transform bg-slate-950 flex items-center justify-center">
+            <img 
+              src="/logo.jpg" 
+              alt="Yop Logo" 
+              className="w-full h-full object-cover" 
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
           </div>
 
           <div>
@@ -51,9 +59,6 @@ function MainApp() {
                 (Yellow Gold / ቢጫ ወርቅ)
               </span>
             </h1>
-            <p className="text-[11px] text-slate-400 font-medium tracking-wide">
-              {lang === 'am' ? 'የብልጽግና እና የቁጠባ ማዕከል' : 'Hub of Prosperity and Savings'}
-            </p>
           </div>
         </div>
 
