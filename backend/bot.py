@@ -194,6 +194,4 @@ async def main():
         except Exception as e:
             print(f"Network error encountered: {e}. Retrying in 5 seconds...")
             await asyncio.sleep(5)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+            

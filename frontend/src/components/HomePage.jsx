@@ -1,146 +1,126 @@
-import React, { useState } from 'react';
-import { ShieldCheck, ArrowRight, Users, Sparkles, ChevronDown, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { PlusCircle, Users, ShoppingBag, BookOpen, Sparkles, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function HomePage({ onNavigate }) {
-  const { t } = useLanguage();
-  const [showEqubMenu, setShowEqubMenu] = useState(false);
+  const { lang } = useLanguage();
+  const [savedEqubs, setSavedEqubs] = useState([]);
+
+  useEffect(() => {
+    // Synchronize local storage state cleanly
+    const storedEqubs = localStorage.getItem('yop_saved_equbs') || localStorage.getItem('all_equbs');
+    if (storedEqubs) {
+      try {
+        const parsed = JSON.parse(storedEqubs);
+        if (Array.isArray(parsed)) setSavedEqubs(parsed);
+      } catch (e) {
+        console.error("Error reading saved equbs", e);
+      }
+    }
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#0b291d] text-white font-sans selection:bg-amber-400 selection:text-slate-950 flex flex-col justify-between">
+    <div className="space-y-8 py-4">
       
-      {/* 🧭 Top Header / Navigation Bar */}
-      <header className="max-w-4xl mx-auto w-full px-6 py-6 flex justify-between items-center relative">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onNavigate("home")}>
-          <div className="w-10 h-10 bg-amber-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-xl shadow-lg">
-            ዮ
-          </div>
-          <div>
-            <h1 className="text-base font-black text-white tracking-wide">{t("title") || "ዮጵ"}</h1>
-            <p className="text-[11px] text-amber-400 font-bold">{t("slogan") || "ቢጫ ወርቅ"}</p>
-          </div>
-        </div>
+      {/* Navigation Quick Links */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <button
+          onClick={() => onNavigate('create')}
+          className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-400 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition cursor-pointer"
+        >
+          <PlusCircle className="w-4 h-4" />
+          <span>{lang === 'am' ? 'ዕቁብ' : 'Equb'}</span>
+        </button>
 
-        {/* 🔗 Navigation Links */}
-        <div className="flex items-center space-x-2">
-          
-          {/* 🎯 ዕቁብ Dropdown Menu */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowEqubMenu(!showEqubMenu)}
-              className="text-xs bg-emerald-900/80 hover:bg-emerald-800 text-amber-400 px-3.5 py-2 rounded-xl border border-amber-500/30 font-bold transition cursor-pointer flex items-center gap-1.5 shadow-md"
-            >
-              <span>{t("nav_equb") || "ዕቁብ"}</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showEqubMenu ? 'rotate-180' : ''}`} />
-            </button>
+        <button
+          onClick={() => onNavigate('marketplace')}
+          className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition cursor-pointer"
+        >
+          <ShoppingBag className="w-4 h-4 text-amber-400" />
+          <span>{lang === 'am' ? 'ማርኬትፕሌስ' : 'Marketplace'}</span>
+        </button>
 
-            {/* Sub-menu options */}
-            {showEqubMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-[#0e3526] border border-emerald-700/80 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                <button
-                  onClick={() => { setShowEqubMenu(false); onNavigate("dashboard"); }}
-                  className="w-full text-left text-xs font-bold text-emerald-200 hover:bg-emerald-800/60 hover:text-amber-400 p-2.5 rounded-xl transition flex items-center gap-2"
-                >
-                  <Users className="w-4 h-4 text-amber-400" />
-                  <span>{t("sub_active_equbs") || "ንቁ ዕቁቦች"}</span>
-                </button>
-                <button
-                  onClick={() => { setShowEqubMenu(false); onNavigate("create"); }}
-                  className="w-full text-left text-xs font-bold text-emerald-200 hover:bg-emerald-800/60 hover:text-amber-400 p-2.5 rounded-xl transition flex items-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>{t("sub_create_equb") || "አዲስ ዕቁብ ፍጠር"}</span>
-                </button>
-              </div>
-            )}
-          </div>
+        <button
+          onClick={() => onNavigate('how-it-works')}
+          className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition cursor-pointer"
+        >
+          <BookOpen className="w-4 h-4 text-amber-400" />
+          <span>{lang === 'am' ? 'እንዴት ይሰራል' : 'How it Works'}</span>
+        </button>
+      </div>
 
-          {/* 🛒 ማርኬትፕሌስ */}
-          <button 
-            onClick={() => onNavigate("market")}
-            className="text-xs bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 px-3.5 py-2 rounded-xl border border-emerald-700/60 transition cursor-pointer font-medium"
-          >
-            {t("nav_market") || "ማርኬትፕሌስ"}
-          </button>
+      {/* Hero Header Title */}
+      <div className="text-center space-y-2 max-w-2xl mx-auto">
+        <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white">
+          Yop <span className="text-amber-400 font-serif font-normal">— Yellow Gold (ቢጫ ወርቅ)</span>
+        </h1>
+        <p className="text-xs md:text-sm text-slate-400 font-medium">
+          {lang === 'am' ? 'የብልጽግና እና የቁጠባ ማዕከል' : 'Hub of Prosperity and Savings'}
+        </p>
+      </div>
 
-          {/* 💡 እንዴት ይሰራል (How it works) */}
-          <button 
-            onClick={() => onNavigate("how-it-works")}
-            className="text-xs bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 px-3.5 py-2 rounded-xl border border-emerald-700/60 transition cursor-pointer font-medium hidden sm:inline-block"
-          >
-            {t("nav_how_it_works") || "እንዴት ይሰራል"}
-          </button>
-
-          {/* ⏳ Coming Soon Buttons */}
-          <button 
-            disabled 
-            className="text-xs bg-emerald-950/40 text-emerald-500/60 px-3 py-2 rounded-xl border border-emerald-900/40 cursor-not-allowed hidden md:flex items-center gap-1"
-          >
-            <Clock className="w-3 h-3" />
-            <span>Coming Soon</span>
-          </button>
-
-        </div>
-      </header>
-
-      {/* 🌟 Main Hero Section */}
-      <main className="max-w-3xl mx-auto px-6 py-8 w-full text-left my-auto">
-        
-        {/* Tsedey Bank & Molale Community Tag */}
-        <div className="inline-flex items-center gap-2 bg-emerald-800/40 border border-emerald-600/40 text-emerald-300 text-xs px-3.5 py-1.5 rounded-full mb-6 font-medium shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>ለ ፀደይ ባንክ (Tsedey Bank) ማማ ቅርንጫፍ እና ለሞላሌ ማህበረሰብ የተዘጋጀ</span>
-        </div>
-
-        {/* Title */}
-        <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-4 leading-tight">
-          ዮጵ — <span className="text-amber-400">ቢጫ ወርቅ</span>
-        </h2>
-
-        {/* 📜 የቃሉ ታሪካዊና መንፈሳዊ ትርጉም (የዲያቆን ዳንኤል ክብረት፣ የሳባውያን እና የኢትዮጵስ ትንተና) */}
-        <div className="bg-[#113828]/80 p-6 rounded-3xl border border-emerald-700/50 shadow-xl backdrop-blur-sm mb-8 space-y-3">
-          <h3 className="text-amber-400 font-extrabold text-sm md:text-base flex items-center gap-2">
-            ✨ የ«ዮጵ» (Yop) ብራንድ ታሪካዊ እና መንፈሳዊ አመጣጥ፦
+      {/* Cultural & Historical Etymology Section (በጥልቀት የተስተካከለ) */}
+      <div className="bg-[#0d1322]/90 border border-amber-500/30 p-6 md:p-8 rounded-3xl shadow-2xl backdrop-blur relative overflow-hidden max-w-3xl mx-auto">
+        <div className="flex items-center gap-2 text-amber-400 text-sm font-bold mb-3">
+          <Sparkles className="w-5 h-5" />
+          <h3>
+            {lang === 'am' 
+              ? 'የ«Yop» (Yellow Gold / ቢጫ ወርቅ) ታሪካዊ እና ስነ-ቃል አውድ፦' 
+              : 'Historical & Cultural Etymology of Yop (Yellow Gold):'}
           </h3>
-          <p className="text-xs md:text-sm text-emerald-100 leading-relaxed">
-            ከጥንታዊው የሳባውያን፣ የአጋዚያን እና የኢትዮጵስ ታሪክ አውድ አንፃር፦ 
-            <strong className="text-amber-300"> «ኢት»</strong> ማለት አምላክ/ፈጣሪ ሲሆን፣ 
-            <strong className="text-amber-300"> «ዮጵ»</strong> ደግሞ <strong className="text-amber-400">«ቢጫ ወርቅ»</strong> (የወርቅ ስጦታ/ብልጽግና) ማለት ነው። 
-            ሁለቱ ሲጣመሩ <strong className="text-white font-bold">«ኢትዮጵያ» — ለአምላክ የሚሰጥ የወርቅ ስጦታ</strong> የሚል ታላቅ ትርጉም ይይዛል። 
-            ዮጵ — የሀብት፣ የዕቁብ እና የቁጠባዎ መገኛ ማዕከል!
-          </p>
         </div>
 
-        {/* 🚀 Action Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            onClick={() => onNavigate("create")}
-            className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 px-6 rounded-2xl text-sm transition shadow-xl cursor-pointer flex items-center justify-center space-x-2 group"
-          >
-            <span>{t("sub_create_equb") || "አዲስ ዕቁብ ፍጠር"}</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-          
-          <button
-            onClick={() => onNavigate("dashboard")}
-            className="w-full bg-[#164230] hover:bg-[#1b4e3a] text-emerald-300 font-bold py-4 px-6 rounded-2xl text-sm transition border border-emerald-700/60 cursor-pointer flex items-center justify-center space-x-2"
-          >
-            <Users className="w-4 h-4 text-amber-400" />
-            <span>{t("sub_active_equbs") || "ንቁ ዕቁቦች (Active Equbs)"}</span>
-          </button>
-        </div>
+        <p className="text-xs md:text-sm text-slate-300 leading-relaxed font-sans space-y-2">
+          {lang === 'am' ? (
+            <>
+              ከጥንታዊው የሳባውያን፣ የአግዓዚያን እና የኢትዮጵያ ታሪካዊ አውድ አንጻር፦ 
+              <strong className="text-amber-400"> «ኢት»</strong> ማለት አምላክ/ፈጣሪ ሲሆን፤ 
+              <strong className="text-amber-400"> «ዮጵ»</strong> ደግሞ 
+              <span className="text-amber-300 font-bold"> «ቢጫ ወርቅ» (የወርቅ ስጦታ / ብልጽግና)</span> ማለት ነው። 
+              ሁለቱ ሲጣመሩ <strong className="text-amber-400">«ኢትዮጵያ»</strong> — ለአምላክ የሚሰጥ የወርቅ ስጦታ የሚል ታላቅ ትርጉም ይይዛል። 
+              <strong className="text-amber-400"> Yop</strong> — የሀብት፣ የዕቁብ እና የቁጠባ መገኛ ማዕከል!
+            </>
+          ) : (
+            <>
+              In ancient Sabaean and Ethiopian history, <strong className="text-amber-400">"Eth"</strong> signifies God/Creator, while <strong className="text-amber-400">"Yop"</strong> stands for <span className="text-amber-300 font-bold">"Yellow Gold" (Gift of Gold & Prosperity)</span>. Together, they form <strong className="text-amber-400">"Ethiopia"</strong> — A golden gift dedicated to God. <strong>Yop</strong> serves as your modern Hub of Prosperity and Savings!
+            </>
+          )}
+        </p>
+      </div>
 
-        {/* 🔐 Trust & Security Badge */}
-        <div className="mt-8 flex items-center gap-3 text-xs text-emerald-300/90 bg-emerald-950/60 p-4 rounded-2xl border border-emerald-900/60">
-          <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
-          <span>እያንዳንዱ ዕቁብ በምስጢራዊ የይለፍ ቃል የተጠበቀ ነው — አባላት ብቻ መረጃውን ማየት ይችላሉ።</span>
-        </div>
-      </main>
+      {/* Main Action Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <button
+          onClick={() => onNavigate('create')}
+          className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 p-5 rounded-2xl font-black text-sm flex items-center justify-between shadow-xl shadow-amber-500/10 cursor-pointer transition transform hover:-translate-y-0.5"
+        >
+          <span>{lang === 'am' ? 'አዲስ ዕቁብ ፍጠር ➔' : 'Create New Equb ➔'}</span>
+          <PlusCircle className="w-5 h-5 text-slate-950" />
+        </button>
 
-      {/* 🦶 Footer */}
-      <footer className="max-w-3xl mx-auto w-full text-center text-xs text-emerald-400/60 py-6 border-t border-emerald-900/40 px-6">
-        ዮጵ (ቢጫ ወርቅ) — ሃይላት © {new Date().getFullYear()} | መብቱ በሕግ የተጠበቀ ነው።
-      </footer>
+        <button
+          onClick={() => onNavigate('equb-detail')}
+          className="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-amber-400 p-5 rounded-2xl font-bold text-sm flex items-center justify-between shadow-xl cursor-pointer transition transform hover:-translate-y-0.5"
+        >
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-amber-400" />
+            <span>{lang === 'am' ? 'ንቁ ዕቁቦች' : 'Active Equbs'}</span>
+          </div>
+          <span className="bg-amber-500/20 text-amber-300 text-xs px-2.5 py-1 rounded-full font-mono">
+            {savedEqubs.length}
+          </span>
+        </button>
+      </div>
+
+      {/* Trust Notice */}
+      <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl text-center max-w-xl mx-auto flex items-center justify-center gap-2 text-xs text-slate-400">
+        <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0" />
+        <span>
+          {lang === 'am' 
+            ? 'እያንዳንዱ ዕቁብ በምስጢራዊ የይለፍ ቃል የተጠበቀ ነው — አባላት ብቻ መረጃውን ማየት ይችላሉ።' 
+            : 'Protected by PIN security — accessible only by registered members.'}
+        </span>
+      </div>
 
     </div>
   );
