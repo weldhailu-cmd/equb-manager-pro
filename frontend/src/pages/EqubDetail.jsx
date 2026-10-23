@@ -9,7 +9,8 @@ import {
   UserCheck, 
   CheckCircle2, 
   Clock, 
-  AlertCircle 
+  AlertCircle,
+  Edit3
 } from 'lucide-react';
 
 export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate, lang = 'am' }) {
@@ -19,6 +20,9 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
   
   const [slotName, setSlotName] = useState('');
   const [activeSlotId, setActiveSlotId] = useState(null);
+  const [editingSlotId, setEditingSlotId] = useState(null);
+  const [editSlotName, setEditSlotName] = useState('');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -124,6 +128,20 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
     setSlots(updatedSlots);
     setSlotName('');
     setErrorMsg('');
+    saveSlotsToStorage(updatedSlots);
+  };
+
+  const handleUpdateSlotName = (slotId) => {
+    if (!editSlotName.trim()) return;
+    const updatedSlots = slots.map(slot => {
+      if (slot.id === slotId) {
+        return { ...slot, name: editSlotName.trim() };
+      }
+      return slot;
+    });
+    setSlots(updatedSlots);
+    setEditingSlotId(null);
+    setEditSlotName('');
     saveSlotsToStorage(updatedSlots);
   };
 
@@ -279,12 +297,46 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                     
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div>
-                        <h4 className="text-xs font-black text-white flex items-center gap-2">
-                          🎯 {slot.name} 
-                          <span className="text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded font-mono text-[11px] border border-amber-500/20">
-                            {slot.amount} ETB
-                          </span>
-                        </h4>
+                        {editingSlotId === slot.id ? (
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="text" 
+                              value={editSlotName} 
+                              onChange={(e) => setEditSlotName(e.target.value)}
+                              placeholder={slot.name}
+                              className="bg-slate-900 border border-amber-400 rounded-lg px-2 py-1 text-xs text-white"
+                            />
+                            <button 
+                              onClick={() => handleUpdateSlotName(slot.id)}
+                              className="bg-amber-500 text-slate-950 px-2.5 py-1 rounded-lg text-[10px] font-bold"
+                            >
+                              {lang === 'am' ? 'መዝግብ' : 'Save'}
+                            </button>
+                            <button 
+                              onClick={() => setEditingSlotId(null)}
+                              className="text-slate-400 text-[10px]"
+                            >
+                              {lang === 'am' ? 'ተው' : 'Cancel'}
+                            </button>
+                          </div>
+                        ) : (
+                          <h4 className="text-xs font-black text-white flex items-center gap-2">
+                            🎯 {slot.name} 
+                            <span className="text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded font-mono text-[11px] border border-amber-500/20">
+                              {slot.amount} ETB
+                            </span>
+                            {role === 'admin' && (
+                              <button 
+                                onClick={() => { setEditingSlotId(slot.id); setEditSlotName(slot.name); }}
+                                className="text-amber-400 hover:text-amber-300 p-1"
+                                title="Edit Slot Name"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </h4>
+                        )}
+
                         <p className="text-[11px] text-slate-300 mt-1">
                           {slot.assignedMember ? (
                             <span className="text-emerald-400 font-bold flex items-center gap-1.5">
@@ -367,7 +419,7 @@ export default function EqubDetail({ equbId, role = 'admin', onBack, onNavigate,
                                       <strong className="text-white">{member.name}</strong>
                                       <span className="text-amber-400/80 ml-2 text-[10px]">({member.phone})</span>
                                     </div>
-                                    <span className="text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded text-[10px] border border-amber-500/20">
+                                    <span className="text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded text-[10px] border border-amber-500/20">
                                       + {lang === 'am' ? 'አስገባ' : 'Assign'}
                                     </span>
                                   </div>
