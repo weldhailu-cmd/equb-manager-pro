@@ -7,18 +7,18 @@ import {
 export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [hubView, setHubView] = useState('select');
 
-  const [equbName, setEqubName] = useState(lang === 'am' ? 'የሳምንታዊ 200 ብር እቁብ' : 'Weekly 200 ETB Equb');
+  const [equbName, setEqubName] = useState(lang === 'am' ? 'የሳምንታዊ 500 ብር እቁብ' : 'Weekly 500 ETB Equb');
   const [cityAddress, setCityAddress] = useState('ሞላሌ');
-  const [amount, setAmount] = useState('200');
+  const [amount, setAmount] = useState('500');
   
   const [frequency, setFrequency] = useState('weekly');
 
   // Schedule States
   const [depositStart, setDepositStart] = useState('ሰኞ (Monday)');
-  const [depositEnd, setDepositEnd] = useState('እሁድ (Sunday)');
+  const [depositEnd, setDepositEnd] = useState('ቅዳሜ (Saturday)');
   const [drawDay, setDrawDay] = useState('እሁድ (Sunday)');
-  const [drawTimeStart, setDrawTimeStart] = useState('17:00'); // 5:00 PM (11:00 Ethiopian)
-  const [drawTimeEnd, setDrawTimeEnd] = useState('18:00');     // 6:00 PM (12:00 Ethiopian)
+  const [drawTimeStart, setDrawTimeStart] = useState('17:00'); 
+  const [drawTimeEnd, setDrawTimeEnd] = useState('18:00');     
 
   // Passwords & Recovery
   const [adminPassword, setAdminPassword] = useState('');
@@ -30,12 +30,13 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
   const [securityAnswer, setSecurityAnswer] = useState('');
   const [showSecurityAnswer, setShowSecurityAnswer] = useState(false);
 
-  const [selectedFeePercent, setSelectedFeePercent] = useState(0.12);
+  // Fee rates: 0.006 (0.6% -> 60 ETB on 10k), 0.012 (1.2% -> 120 ETB on 10k), 0.024 (2.4% -> 240 ETB on 10k)
+  const [selectedFeeRate, setSelectedFeeRate] = useState(0.012);
 
   const numericAmount = parseFloat(amount) || 0;
   const estimatedMembers = 20; 
   const totalPool = numericAmount * estimatedMembers;
-  const serviceFeeAmount = (totalPool * selectedFeePercent) / 100;
+  const serviceFeeAmount = totalPool * selectedFeeRate;
   const netPoolForWinner = totalPool - serviceFeeAmount;
 
   // 🇪🇹 Helper Function for Ethiopian Time Display
@@ -60,7 +61,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       setDrawTimeEnd('20:00');
     } else if (val === 'weekly') {
       setDepositStart('ሰኞ (Monday)');
-      setDepositEnd('እሁድ (Sunday)');
+      setDepositEnd('ቅዳሜ (Saturday)');
       setDrawDay('እሁድ (Sunday)');
       setDrawTimeStart('17:00');
       setDrawTimeEnd('18:00');
@@ -103,7 +104,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
       contributionAmount: numericAmount,
       frequency,
       scheduleSummary,
-      feePercent: selectedFeePercent,
+      feePercent: selectedFeeRate * 100,
       adminPassword,
       memberPassword,
       securityQuestion,
@@ -277,7 +278,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                 />
                 <div className="flex gap-1">
                   <button type="button" onClick={() => setAmount('100')} className="bg-slate-900 hover:bg-slate-800 text-xs px-2.5 py-3 rounded-xl text-amber-400 font-bold border border-amber-500/30 cursor-pointer">100</button>
-                  <button type="button" onClick={() => setAmount('200')} className="bg-slate-900 hover:bg-slate-800 text-xs px-2.5 py-3 rounded-xl text-amber-400 font-bold border border-amber-500/30 cursor-pointer">200</button>
+                  <button type="button" onClick={() => setAmount('500')} className="bg-slate-900 hover:bg-slate-800 text-xs px-2.5 py-3 rounded-xl text-amber-400 font-bold border border-amber-500/30 cursor-pointer">500</button>
                 </div>
               </div>
             </div>
@@ -409,7 +410,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
 
               {frequency === 'weekly' || frequency === 'monthly' ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {/* Day Selector */}
                   <select
                     value={drawDay}
                     onChange={(e) => setDrawDay(e.target.value)}
@@ -432,7 +432,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                     )}
                   </select>
 
-                  {/* Start Time */}
                   <div>
                     <input
                       type="time"
@@ -448,7 +447,6 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
                     )}
                   </div>
 
-                  {/* End Time */}
                   <div>
                     <input
                       type="time"
@@ -499,6 +497,7 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
             </div>
           </div>
 
+          {/* Service Fee Percentage Options (0.6%, 1.2%, 2.4%) */}
           <div className="bg-slate-950/80 border border-amber-500/30 p-4 rounded-2xl space-y-3">
             <label className="block text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <Percent className="w-4 h-4" />
@@ -507,42 +506,42 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
               <div 
-                onClick={() => setSelectedFeePercent(0.06)}
+                onClick={() => setSelectedFeeRate(0.006)}
                 className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
-                  selectedFeePercent === 0.06 ? 'bg-amber-500/20 border-amber-400 shadow-md' : 'bg-slate-900 border-slate-800 opacity-70 hover:opacity-100'
+                  selectedFeeRate === 0.006 ? 'bg-amber-500/20 border-amber-400 shadow-md' : 'bg-slate-900 border-slate-800 opacity-70 hover:opacity-100'
                 }`}
               >
                 <div>
                   <p className="text-xs font-bold text-amber-300">መሠረታዊ (Basic)</p>
-                  <p className="text-sm font-black text-white mt-0.5">0.06%</p>
+                  <p className="text-sm font-black text-white mt-0.5">0.6% (60 ብር / 10k)</p>
                 </div>
-                {selectedFeePercent === 0.06 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
+                {selectedFeeRate === 0.006 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
               </div>
 
               <div 
-                onClick={() => setSelectedFeePercent(0.12)}
+                onClick={() => setSelectedFeeRate(0.012)}
                 className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
-                  selectedFeePercent === 0.12 ? 'bg-amber-500/20 border-amber-400 shadow-md' : 'bg-slate-900 border-slate-800 opacity-70 hover:opacity-100'
+                  selectedFeeRate === 0.012 ? 'bg-amber-500/20 border-amber-400 shadow-md' : 'bg-slate-900 border-slate-800 opacity-70 hover:opacity-100'
                 }`}
               >
                 <div>
                   <p className="text-xs font-bold text-amber-300">ስታንዳርድ (Standard)</p>
-                  <p className="text-sm font-black text-white mt-0.5">0.12%</p>
+                  <p className="text-sm font-black text-white mt-0.5">1.2% (120 ብር / 10k)</p>
                 </div>
-                {selectedFeePercent === 0.12 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
+                {selectedFeeRate === 0.012 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
               </div>
 
               <div 
-                onClick={() => setSelectedFeePercent(0.24)}
+                onClick={() => setSelectedFeeRate(0.024)}
                 className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
-                  selectedFeePercent === 0.24 ? 'bg-amber-500/20 border-amber-400 shadow-md' : 'bg-slate-900 border-slate-800 opacity-70 hover:opacity-100'
+                  selectedFeeRate === 0.024 ? 'bg-amber-500/20 border-amber-400 shadow-md' : 'bg-slate-900 border-slate-800 opacity-70 hover:opacity-100'
                 }`}
               >
                 <div>
                   <p className="text-xs font-bold text-amber-300">አድቫንስድ (Advanced)</p>
-                  <p className="text-sm font-black text-white mt-0.5">0.24%</p>
+                  <p className="text-sm font-black text-white mt-0.5">2.4% (240 ብር / 10k)</p>
                 </div>
-                {selectedFeePercent === 0.24 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
+                {selectedFeeRate === 0.024 ? <CheckSquare className="w-5 h-5 text-amber-400" /> : <Square className="w-5 h-5 text-slate-600" />}
               </div>
             </div>
           </div>
@@ -641,11 +640,11 @@ export default function CreateEqubHub({ lang = 'am', onNavigate, onBack }) {
           {numericAmount > 0 && (
             <div className="bg-slate-950/90 border border-amber-500/30 p-4 rounded-2xl space-y-1.5 text-xs">
               <p className="font-bold text-amber-400 flex items-center gap-1.5">
-                <Calculator className="w-4 h-4" /> {lang === 'am' ? `የእቁብ ስሌት ማጠቃለያ (${selectedFeePercent}% የሲስተም ክፍያ)` : 'Calculation Summary'}
+                <Calculator className="w-4 h-4" /> {lang === 'am' ? `የእቁብ ስሌት ማጠቃለያ (${(selectedFeeRate * 100).toFixed(1)}% የሲስተም ክፍያ)` : 'Calculation Summary'}
               </p>
               <div className="text-slate-300 space-y-1 pt-1 font-mono">
                 <p>{lang === 'am' ? 'ግምታዊ ጠቅላላ መጠን (በ 20 አባላት):' : 'Estimated Total Pool:'} <b className="text-white">{totalPool.toLocaleString()} ብር</b></p>
-                <p>{lang === 'am' ? 'የሲስተም አገልግሎት ክፍያ (' + selectedFeePercent + '%):' : 'System Fee:'} <b className="text-amber-400">{serviceFeeAmount.toFixed(2)} ብር</b></p>
+                <p>{lang === 'am' ? 'የሲስተም አገልግሎት ክፍያ (' + (selectedFeeRate * 100).toFixed(1) + '%):' : 'System Fee:'} <b className="text-amber-400">{serviceFeeAmount.toFixed(2)} ብር</b></p>
                 <p>{lang === 'am' ? 'ለዕጣ አሸናፊ የሚደርሰው ንጹህ ገንዘብ:' : 'Net Pool for Winner:'} <b className="text-emerald-400">{netPoolForWinner.toLocaleString()} ብር</b></p>
                 <p className="text-amber-300/80 pt-1 text-[11px]">
                   📅 {lang === 'am' 
