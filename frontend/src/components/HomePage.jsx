@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Users, ShoppingBag, BookOpen, Sparkles, ShieldCheck, Megaphone, ShieldAlert, Clock, Layers } from 'lucide-react';
+import { PlusCircle, Users, ShoppingBag, BookOpen, Sparkles, ShieldCheck, Megaphone, ShieldAlert, Clock, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function HomePage({ onNavigate }) {
   const { lang } = useLanguage();
   const [savedEqubs, setSavedEqubs] = useState([]);
-  const [showEqubOptions, setShowEqubOptions] = useState(false);
 
   useEffect(() => {
     const storedEqubs = localStorage.getItem('yop_saved_equbs') || localStorage.getItem('all_equbs');
@@ -22,34 +21,25 @@ export default function HomePage({ onNavigate }) {
   return (
     <div className="space-y-8 py-4">
       
-      {/* 🌟 Top Horizontal Navigation Bar (ሁሉም አገልግሎቶች በአግድም) */}
+      {/* 🌟 Top Navigation Bar */}
       <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 bg-slate-900/60 p-2 rounded-2xl border border-amber-500/20 max-w-4xl mx-auto backdrop-blur">
-        
-        {/* Equb Nav Item */}
         <button
-          onClick={() => setShowEqubOptions(!showEqubOptions)}
-          className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
-            showEqubOptions 
-              ? 'bg-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/20' 
-              : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30'
-          }`}
+          onClick={() => onNavigate('create')}
+          className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
         >
           <PlusCircle className="w-4 h-4" />
           <span>{lang === 'am' ? 'ዕቁብ' : 'Equb'}</span>
         </button>
 
-        {/* Marketplace Nav Item */}
         <button
-          onClick={() => { setShowEqubOptions(false); onNavigate('marketplace'); }}
+          onClick={() => onNavigate('marketplace')}
           className="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
         >
           <ShoppingBag className="w-4 h-4 text-amber-400" />
           <span>{lang === 'am' ? 'ማርኬትፕሌስ' : 'Marketplace'}</span>
         </button>
 
-        {/* Telegram Ads Nav Item (Coming Soon) */}
         <button
-          onClick={() => { setShowEqubOptions(false); }}
           className="bg-slate-950/80 border border-slate-800/80 text-slate-400 font-medium px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 opacity-80 cursor-not-allowed"
           title="Coming Soon"
         >
@@ -58,9 +48,7 @@ export default function HomePage({ onNavigate }) {
           <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">Soon</span>
         </button>
 
-        {/* Escrow Nav Item (Coming Soon) */}
         <button
-          onClick={() => { setShowEqubOptions(false); }}
           className="bg-slate-950/80 border border-slate-800/80 text-slate-400 font-medium px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 opacity-80 cursor-not-allowed"
           title="Coming Soon"
         >
@@ -69,9 +57,8 @@ export default function HomePage({ onNavigate }) {
           <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">Soon</span>
         </button>
 
-        {/* How It Works Nav Item */}
         <button
-          onClick={() => { setShowEqubOptions(false); onNavigate('how-it-works'); }}
+          onClick={() => onNavigate('how-it-works')}
           className="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition cursor-pointer"
         >
           <BookOpen className="w-4 h-4 text-amber-400" />
@@ -115,98 +102,119 @@ export default function HomePage({ onNavigate }) {
         </p>
       </div>
 
-      {/* 🌟 Equb Dual Options Area (ዕቁብ ሲጫን አዲስ ፍጠር ወይም ንቁ ዕቁቦች የሚመጣበት) */}
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
-            <Layers className="w-4 h-4" />
-            <span>{lang === 'am' ? 'የዕቁብ አገልግሎቶች' : 'Equb Services'}</span>
-          </h2>
-          <span className="text-[11px] text-slate-500">
-            {lang === 'am' ? 'አንዱን ይምረጡ' : 'Select Option'}
+      {/* 🌟 Horizontal Swap / Carousel Swipe Feature Cards (ዩቲዩብ / ኢንስታግራም ስዋይፕ ስታይል) */}
+      <div className="max-w-4xl mx-auto space-y-3">
+        <div className="flex items-center justify-between px-2">
+          <span className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+            {lang === 'am' ? 'የፕላትፎርሙ አገልግሎቶች (በጎን ስዋይፕ ያድርጉ ➔)' : 'Platform Services (Swipe Horizontal ➔)'}
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Swipeable Scroll Container */}
+        <div className="flex gap-4 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-amber-500/20 px-1">
           
-          {/* Option 1: Create New Equb */}
-          <button
+          {/* Card 1: Equb Hub */}
+          <div 
             onClick={() => onNavigate('create')}
-            className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 p-5 rounded-2xl font-black text-sm flex items-center justify-between shadow-xl shadow-amber-500/10 cursor-pointer transition transform hover:-translate-y-0.5 group"
+            className="snap-center min-w-[280px] md:min-w-[320px] bg-gradient-to-br from-amber-500/20 to-slate-900 border border-amber-500/40 p-6 rounded-3xl shadow-xl hover:border-amber-400 transition cursor-pointer flex flex-col justify-between space-y-4 group"
           >
-            <div className="text-left">
-              <span className="block">{lang === 'am' ? 'አዲስ ዕቁብ ፍጠር ➔' : 'Create New Equb ➔'}</span>
-              <span className="text-[11px] text-slate-900/80 font-normal block mt-0.5">
-                {lang === 'am' ? 'አዲስ ዲጂታል ዕቁብ ማቋቋም' : 'Set up a new digital equb'}
+            <div className="flex justify-between items-center">
+              <span className="p-3 bg-amber-500/20 rounded-2xl text-amber-400 border border-amber-500/30">
+                <PlusCircle className="w-6 h-6" />
+              </span>
+              <span className="text-xs bg-amber-500/20 text-amber-300 font-bold px-2.5 py-1 rounded-full border border-amber-500/30">
+                {savedEqubs.length} {lang === 'am' ? 'ንቁ ዕቁቦች' : 'Active'}
               </span>
             </div>
-            <PlusCircle className="w-6 h-6 text-slate-950 group-hover:scale-110 transition" />
-          </button>
-
-          {/* Option 2: Active / Existing Equbs */}
-          <button
-            onClick={() => onNavigate('equb-detail')}
-            className="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-amber-400 p-5 rounded-2xl font-bold text-sm flex items-center justify-between shadow-xl cursor-pointer transition transform hover:-translate-y-0.5 text-left group"
-          >
             <div>
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-amber-400" />
-                <span>{lang === 'am' ? 'ንቁ ዕቁቦች' : 'Active Equbs'}</span>
-              </div>
-              <span className="text-[11px] text-slate-400 font-normal block mt-1">
-                {lang === 'am' ? 'የተፈጠሩ ዕቁቦችን ይመልከቱ' : 'View existing active equbs'}
-              </span>
+              <h3 className="font-bold text-white text-base group-hover:text-amber-400 transition">
+                {lang === 'am' ? 'ዲጂታል ዕቁብ (Equb Hub)' : 'Digital Equb Hub'}
+              </h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                {lang === 'am' ? 'አዲስ ዕቁብ ያቋቁሙ ወይም የተፈጠሩ ዕቁቦችን በምስጢራዊ ኮድ ይከታተሉ።' : 'Create or join secure digital equbs with encrypted slots.'}
+              </p>
             </div>
-            <span className="bg-amber-500/20 text-amber-300 text-xs px-2.5 py-1 rounded-full font-mono border border-amber-500/30">
-              {savedEqubs.length}
-            </span>
-          </button>
-
-        </div>
-      </div>
-
-      {/* Upcoming Services Cards (Telegram Ads & Escrow) */}
-      <div className="max-w-3xl mx-auto pt-2 space-y-3">
-        <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold text-center">
-          {lang === 'am' ? 'በቅርብ ቀን የሚጠብቁ አዳዲስ አገልግሎቶች (COMING SOON)' : 'UPCOMING SERVICES'}
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          
-          {/* Telegram Promotion Hub */}
-          <div className="bg-slate-900/60 border border-amber-500/20 p-5 rounded-2xl relative overflow-hidden backdrop-blur flex flex-col justify-between space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                <Megaphone className="w-4 h-4" />
-                <span>{lang === 'am' ? 'የቴሌግራም ቻናል ማስተዋወቂያ' : 'Telegram Ad Hub'}</span>
-              </div>
-              <span className="bg-amber-500/10 text-amber-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> Coming Soon
-              </span>
+            <div className="text-xs font-bold text-amber-400 flex items-center gap-1 group-hover:translate-x-1 transition">
+              <span>{lang === 'am' ? 'ወደ ዕቁብ ግባ' : 'Enter Equb'}</span>
+              <ArrowRight className="w-4 h-4" />
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              {lang === 'am'
-                ? 'የቴሌግራም ቻናል ባለቤቶች ቻናላቸውን የሚያስተውቁበት እና ማስታወቂያ የሚያሰራጩበት በኮሚሽን የሚሰራ ዘመናዊ ፕላትፎርም።'
-                : 'Monetize and promote Telegram channels seamlessly with automated commission management.'}
-            </p>
           </div>
 
-          {/* Digital Asset Escrow Marketplace */}
-          <div className="bg-slate-900/60 border border-amber-500/20 p-5 rounded-2xl relative overflow-hidden backdrop-blur flex flex-col justify-between space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                <ShieldAlert className="w-4 h-4" />
-                <span>{lang === 'am' ? 'የዲጂታል ንብረት Escrow ግብይት' : 'Digital Asset Escrow'}</span>
-              </div>
-              <span className="bg-amber-500/10 text-amber-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+          {/* Card 2: Marketplace */}
+          <div 
+            onClick={() => onNavigate('marketplace')}
+            className="snap-center min-w-[280px] md:min-w-[320px] bg-slate-900/80 border border-slate-800 p-6 rounded-3xl shadow-xl hover:border-amber-500/40 transition cursor-pointer flex flex-col justify-between space-y-4 group"
+          >
+            <div className="flex justify-between items-center">
+              <span className="p-3 bg-slate-950 rounded-2xl text-amber-400 border border-slate-800">
+                <ShoppingBag className="w-6 h-6" />
+              </span>
+              <span className="text-xs bg-slate-800 text-slate-300 font-bold px-2.5 py-1 rounded-full">
+                Market
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-base group-hover:text-amber-400 transition">
+                {lang === 'am' ? 'ማርኬትፕሌስ (Marketplace)' : 'Marketplace'}
+              </h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                {lang === 'am' ? 'የተለያዩ ምርቶች እና አገልግሎቶች የሚገበያዩበት ክፍት ገበያ።' : 'Explore products and services in a unified digital market.'}
+              </p>
+            </div>
+            <div className="text-xs font-bold text-amber-400 flex items-center gap-1 group-hover:translate-x-1 transition">
+              <span>{lang === 'am' ? 'ወደ ገበያ ግባ' : 'Visit Market'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          </div>
+
+          {/* Card 3: Telegram Promotion Hub */}
+          <div className="snap-center min-w-[280px] md:min-w-[320px] bg-slate-900/60 border border-slate-800/80 p-6 rounded-3xl shadow-xl flex flex-col justify-between space-y-4 opacity-90">
+            <div className="flex justify-between items-center">
+              <span className="p-3 bg-slate-950 rounded-2xl text-amber-400 border border-slate-800">
+                <Megaphone className="w-6 h-6" />
+              </span>
+              <span className="text-[10px] bg-amber-500/10 text-amber-400 font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
                 <Clock className="w-3 h-3" /> Coming Soon
               </span>
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              {lang === 'am'
-                ? 'የቲክቶክ፣ ዩቲዩብ እና ቴሌግራም አካውንቶችን ያለ ምንም ማጭበርበር በመካከለኛ (Escrow) ጥበቃ የመግዣ እና መሸጫ ማዕከል ።'
-                : 'Buy and sell TikTok, YouTube, and Telegram accounts securely via escrow hold protection.'}
-            </p>
+            <div>
+              <h3 className="font-bold text-white text-base">
+                {lang === 'am' ? 'የቴሌግራም ቻናል ማስተዋወቂያ' : 'Telegram Ad Hub'}
+              </h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                {lang === 'am'
+                  ? 'የቴሌግራም ቻናል ባለቤቶች ቻናላቸውን የሚያስተውቁበት በኮሚሽን የሚሰራ ፕላትፎርም።'
+                  : 'Monetize and promote Telegram channels with commission tools.'}
+              </p>
+            </div>
+            <div className="text-xs font-bold text-slate-500 flex items-center gap-1">
+              <span>Coming Soon</span>
+            </div>
+          </div>
+
+          {/* Card 4: Digital Asset Escrow */}
+          <div className="snap-center min-w-[280px] md:min-w-[320px] bg-slate-900/60 border border-slate-800/80 p-6 rounded-3xl shadow-xl flex flex-col justify-between space-y-4 opacity-90">
+            <div className="flex justify-between items-center">
+              <span className="p-3 bg-slate-950 rounded-2xl text-amber-400 border border-slate-800">
+                <ShieldAlert className="w-6 h-6" />
+              </span>
+              <span className="text-[10px] bg-amber-500/10 text-amber-400 font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Coming Soon
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-base">
+                {lang === 'am' ? 'የዲጂታል ንብረት Escrow' : 'Digital Asset Escrow'}
+              </h3>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                {lang === 'am'
+                  ? 'የቲክቶክ፣ ዩቲዩብ እና ቴሌግራም አካውንቶችን በመካከለኛ (Escrow) ጥበቃ የመግዣ ማዕከል ።'
+                  : 'Buy & sell social accounts safely via escrow hold.'}
+              </p>
+            </div>
+            <div className="text-xs font-bold text-slate-500 flex items-center gap-1">
+              <span>Coming Soon</span>
+            </div>
           </div>
 
         </div>
