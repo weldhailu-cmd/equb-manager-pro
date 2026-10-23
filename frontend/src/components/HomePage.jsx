@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Users, ShoppingBag, BookOpen, Sparkles, ShieldCheck } from 'lucide-react';
+import { PlusCircle, Users, ShoppingBag, BookOpen, Sparkles, ShieldCheck, Megaphone, ShieldAlert, Clock } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function HomePage({ onNavigate }) {
@@ -49,17 +49,14 @@ export default function HomePage({ onNavigate }) {
         </button>
       </div>
 
-      {/* Hero Header Title */}
+      {/* Hero Header Title (Pure Yellow Gold Slogan) */}
       <div className="text-center space-y-2 max-w-2xl mx-auto">
         <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white">
           Yop <span className="text-amber-400 font-serif font-normal">— Yellow Gold (ቢጫ ወርቅ)</span>
         </h1>
-        <p className="text-xs md:text-sm text-slate-400 font-medium">
-          {lang === 'am' ? 'የብልጽግና እና የቁጠባ ማዕከል' : 'Hub of Prosperity and Savings'}
-        </p>
       </div>
 
-      {/* Cultural & Historical Etymology Section (በጥልቀት የተስተካከለ) */}
+      {/* Cultural & Historical Etymology Section */}
       <div className="bg-[#0d1322]/90 border border-amber-500/30 p-6 md:p-8 rounded-3xl shadow-2xl backdrop-blur relative overflow-hidden max-w-3xl mx-auto">
         <div className="flex items-center gap-2 text-amber-400 text-sm font-bold mb-3">
           <Sparkles className="w-5 h-5" />
@@ -70,7 +67,7 @@ export default function HomePage({ onNavigate }) {
           </h3>
         </div>
 
-        <p className="text-xs md:text-sm text-slate-300 leading-relaxed font-sans space-y-2">
+        <p className="text-xs md:text-sm text-slate-300 leading-relaxed font-sans">
           {lang === 'am' ? (
             <>
               ከጥንታዊው የሳባውያን፣ የአግዓዚያን እና የኢትዮጵያ ታሪካዊ አውድ አንጻር፦ 
@@ -110,6 +107,53 @@ export default function HomePage({ onNavigate }) {
             {savedEqubs.length}
           </span>
         </button>
+      </div>
+
+      {/* Upcoming / Coming Soon Modules (Telegram Promotion & Digital Asset Escrow) */}
+      <div className="max-w-3xl mx-auto pt-4 space-y-3">
+        <h3 className="text-xs uppercase tracking-widest text-slate-500 font-bold text-center">
+          {lang === 'am' ? 'በቅርብ ቀን የሚጠብቁ አዳዲስ አገልግሎቶች (Coming Soon)' : 'Upcoming Services'}
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Card 1: Telegram Promotion Hub */}
+          <div className="bg-slate-900/60 border border-amber-500/20 p-5 rounded-2xl relative overflow-hidden backdrop-blur flex flex-col justify-between space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <Megaphone className="w-4 h-4" />
+                <span>{lang === 'am' ? 'የቴሌግራም ቻናል ማስተዋወቂያ' : 'Telegram Ad Hub'}</span>
+              </div>
+              <span className="bg-amber-500/10 text-amber-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Coming Soon
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {lang === 'am'
+                ? 'የቴሌግራም ቻናል ባለቤቶች ቻናላቸውን የሚያስተውቁበት እና ማስታወቂያ የሚያሰራጩበት በኮሚሽን የሚሰራ ዘመናዊ ፕላትፎርም።'
+                : 'Monetize and promote Telegram channels seamlessly with automated commission management.'}
+            </p>
+          </div>
+
+          {/* Card 2: Digital Asset Escrow Marketplace */}
+          <div className="bg-slate-900/60 border border-amber-500/20 p-5 rounded-2xl relative overflow-hidden backdrop-blur flex flex-col justify-between space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <ShieldAlert className="w-4 h-4" />
+                <span>{lang === 'am' ? 'የዲጂታል ንብረት Escrow ግብይት' : 'Digital Asset Escrow'}</span>
+              </div>
+              <span className="bg-amber-500/10 text-amber-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Coming Soon
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {lang === 'am'
+                ? 'የቲክቶክ፣ ዩቲዩብ እና ቴሌግራም አካውንቶችን ያለ ምንም ማጭበርበር በመካከለኛ (Escrow) ጥበቃ የመግዣ እና መሸጫ ማዕከል ።'
+                : 'Buy and sell TikTok, YouTube, and Telegram accounts securely via escrow hold protection.'}
+            </p>
+          </div>
+
+        </div>
       </div>
 
       {/* Trust Notice */}
